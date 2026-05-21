@@ -2,14 +2,21 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import { Colors } from '../../constants/colors';
 import { Radius, Spacing } from '../../constants/theme';
+import { freelancers } from '../../constants/mock-data';
 
 const Step3Screen = () => {
   const router = useRouter();
+  const { freelancerId } = useLocalSearchParams<{ freelancerId?: string }>();
   const scale = useRef(new Animated.Value(1)).current;
+
+  const selectedTutor = freelancerId
+    ? freelancers.find((item) => item.id === freelancerId)
+    : undefined;
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -21,7 +28,10 @@ const Step3Screen = () => {
     animation.start();
 
     const timer = setTimeout(() => {
-      router.replace('/request/step4');
+      router.replace({
+        pathname: '/request/step4',
+        params: freelancerId ? { freelancerId } : undefined,
+      });
     }, 3000);
 
     return () => {
@@ -33,10 +43,22 @@ const Step3Screen = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          onPress={() => router.back()}
+          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+        >
+          <Ionicons name="chevron-back" size={18} color={Colors.textPrimary} />
+          <Text style={styles.backText}>Back</Text>
+        </Pressable>
+
         <Text style={styles.progress}>Step 3 of 4</Text>
         <Animated.View style={[styles.pulse, { transform: [{ scale }] }]} />
         <Text style={styles.title}>Finding available tutor...</Text>
-        <Text style={styles.subtitle}>Programming - Urgent</Text>
+        <Text style={styles.subtitle}>
+          {selectedTutor ? `Requesting ${selectedTutor.name}` : 'Matching your request'}
+        </Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Cancel"
@@ -67,6 +89,19 @@ const styles = StyleSheet.create({
     left: Spacing.lg,
     fontSize: 12,
     color: Colors.textMuted,
+  },
+  backButton: {
+    position: 'absolute',
+    top: Spacing.lg,
+    right: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  backText: {
+    fontSize: 13,
+    color: Colors.textPrimary,
+    fontWeight: '600',
   },
   pulse: {
     width: 120,

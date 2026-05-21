@@ -54,6 +54,14 @@ const TabsLayout = () => {
         }}
       />
       <Tabs.Screen
+        name="instant-help"
+        options={{
+          title: 'Find Help',
+          tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ionicons name="location-outline" color={color} size={size} />,
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="messages"
         options={{
           title: 'Messages',

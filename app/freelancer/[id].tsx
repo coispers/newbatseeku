@@ -39,7 +39,7 @@ const FreelancerProfileScreen = () => {
               <Text style={styles.reputationText}>{freelancer.reputationLabel}</Text>
             </View>
             <View style={styles.ratingRow}>
-              <Ionicons name="star" size={14} color={Colors.gold} />
+              <Ionicons name="star" size={14} color="#1A5C38" />
               <Text style={styles.ratingText}>{freelancer.rating.toFixed(1)}</Text>
             </View>
           </View>
@@ -115,7 +115,7 @@ const FreelancerProfileScreen = () => {
                     <Text style={styles.reviewDate}>{item.date}</Text>
                   </View>
                   <View style={styles.reviewRatingRow}>
-                    <Ionicons name="star" size={12} color={Colors.gold} />
+                    <Ionicons name="star" size={12} color="#1A5C38" />
                     <Text style={styles.reviewRating}>{item.rating}</Text>
                   </View>
                 </View>
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   reviewRating: {
     fontSize: 12,
-    color: Colors.gold,
+    color: Colors.forest,
     fontWeight: '600',
   },
   reviewRatingRow: {

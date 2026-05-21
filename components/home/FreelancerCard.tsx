@@ -45,7 +45,7 @@ export const FreelancerCard = ({
       <Text style={styles.name} numberOfLines={1}>{name}</Text>
       <Text style={styles.subject} numberOfLines={1}>{subject}</Text>
       <View style={styles.row}>
-        <Ionicons name="star" size={14} color="#B8860B" />
+        <Ionicons name="star" size={14} color="#1A5C38" />
         <Text style={styles.rating}>{rating.toFixed(1)}</Text>
       </View>
       

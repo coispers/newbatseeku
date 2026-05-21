@@ -24,6 +24,7 @@ export type Errand = {
   location: string;
   timeAgo: string;
   category: string;
+  ownerId: string;
 };
 
 export type Chat = {
@@ -167,6 +168,7 @@ export const errands: Errand[] = [
     location: 'Main Campus',
     timeAgo: '12m ago',
     category: 'Food',
+    ownerId: 'student1@g.batstate-u.edu.ph',
   },
   {
     id: 'e2',
@@ -175,6 +177,7 @@ export const errands: Errand[] = [
     location: 'Library',
     timeAgo: '35m ago',
     category: 'Printing',
+    ownerId: 'student1@g.batstate-u.edu.ph',
   },
   {
     id: 'e3',
@@ -183,6 +186,7 @@ export const errands: Errand[] = [
     location: 'Engineering Building',
     timeAgo: '1h ago',
     category: 'Supplies',
+    ownerId: 'student2@g.batstate-u.edu.ph',
   },
 ];
 

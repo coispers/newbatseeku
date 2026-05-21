@@ -23,7 +23,7 @@ export const ServiceCard = ({ title, category, price, rating, tutor }: ServiceCa
       </View>
       <Text style={styles.category}>{category} - {tutor}</Text>
       <View style={styles.ratingRow}>
-        <Ionicons name="star" size={14} color={Colors.gold} />
+        <Ionicons name="star" size={14} color={Colors.forest} />
         <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
       </View>
     </View>

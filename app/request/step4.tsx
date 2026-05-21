@@ -3,15 +3,21 @@ import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Colors } from '../../constants/colors';
 import { Radius, Shadow, Spacing } from '../../constants/theme';
 import { Avatar } from '../../components/ui/Avatar';
+import { freelancers } from '../../constants/mock-data';
 
 const Step4Screen = () => {
   const router = useRouter();
+  const { freelancerId } = useLocalSearchParams<{ freelancerId?: string }>();
   const fade = useRef(new Animated.Value(0)).current;
+
+  const selectedTutor = freelancerId
+    ? freelancers.find((item) => item.id === freelancerId)
+    : undefined;
 
   useEffect(() => {
     Animated.timing(fade, { toValue: 1, duration: 600, useNativeDriver: true }).start();
@@ -20,6 +26,16 @@ const Step4Screen = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Confirm"
+          onPress={() => router.replace('/(tabs)')}
+          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+        >
+          <Ionicons name="checkmark" size={18} color={Colors.textPrimary} />
+          <Text style={styles.backText}>Okay</Text>
+        </Pressable>
+
         <Text style={styles.progress}>Step 4 of 4</Text>
         <Animated.View style={[styles.check, { opacity: fade }]}
         >
@@ -30,10 +46,12 @@ const Step4Screen = () => {
         <Text style={styles.subtitle}>Responds within 5 minutes</Text>
 
         <View style={styles.tutorCard}>
-          <Avatar initials="AC" size={52} />
+          <Avatar initials={selectedTutor?.avatar ?? 'AC'} size={52} />
           <View style={styles.tutorInfo}>
-            <Text style={styles.tutorName}>Andrea Cruz</Text>
-            <Text style={styles.tutorMeta}>Rating 4.9 - ETA 5 min</Text>
+            <Text style={styles.tutorName}>{selectedTutor?.name ?? 'Andrea Cruz'}</Text>
+            <Text style={styles.tutorMeta}>
+              {selectedTutor ? `Rating ${selectedTutor.rating.toFixed(1)} - ETA 5 min` : 'Rating 4.9 - ETA 5 min'}
+            </Text>
           </View>
         </View>
 
@@ -49,7 +67,9 @@ const Step4Screen = () => {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="View profile"
-            onPress={() => router.replace('/freelancer/f1')}
+            onPress={() =>
+              router.replace(selectedTutor ? `/freelancer/${selectedTutor.id}` : '/freelancer/f1')
+            }
             style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
           >
             <Text style={styles.secondaryText}>View Profile</Text>
@@ -77,6 +97,19 @@ const styles = StyleSheet.create({
     left: Spacing.lg,
     fontSize: 12,
     color: Colors.textMuted,
+  },
+  backButton: {
+    position: 'absolute',
+    top: Spacing.lg,
+    right: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  backText: {
+    fontSize: 13,
+    color: Colors.textPrimary,
+    fontWeight: '600',
   },
   check: {
     width: 72,

@@ -15,7 +15,7 @@ const scoreColor = (score: number) => {
     return Colors.verified;
   }
   if (score >= 60) {
-    return Colors.gold;
+    return Colors.forest;
   }
   return Colors.primary;
 };

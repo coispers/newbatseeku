@@ -47,7 +47,7 @@ const ProfileScreen = () => {
   const initials = user?.name?.split(' ').map((part) => part[0]).join('') || 'JD';
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: isFreelancer ? '#FFFBEB' : '#FFFFFF' }]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: isFreelancer ? '#F0FDF4' : '#FFFFFF' }]}>
       <View style={styles.container}>
         {/* HEADER */}
         <View style={styles.header}>
@@ -55,12 +55,12 @@ const ProfileScreen = () => {
             initials={initials}
             size={72}
             style={{
-              backgroundColor: isFreelancer ? '#FEF9C3' : '#FDECEA',
-              borderColor: isFreelancer ? '#E8DDA8' : '#FDECEA',
+              backgroundColor: isFreelancer ? '#DCFCE7' : '#FDECEA',
+              borderColor: isFreelancer ? '#DCFCE7' : '#FDECEA',
               borderWidth: 1,
             }}
             textStyle={{
-              color: isFreelancer ? '#8B6914' : '#8B0000',
+              color: isFreelancer ? '#144D2E' : '#8B0000',
               fontWeight: '700',
             }}
           />
@@ -95,7 +95,7 @@ const ProfileScreen = () => {
         )}
 
         {/* STATS ROW */}
-        <View style={[styles.statsRow, { backgroundColor: isFreelancer ? '#FFFDF0' : '#F7F7F8' }]}>
+        <View style={[styles.statsRow, { backgroundColor: isFreelancer ? '#F0FDF4' : '#F7F7F8' }]}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>48</Text>
             <Text style={styles.statLabel}>Reviews</Text>
@@ -133,7 +133,7 @@ const ProfileScreen = () => {
                       {
                         backgroundColor: pressed
                           ? switchFreelancer
-                            ? '#FEF9C3' // gold highlight on press
+                            ? '#DCFCE7' // forest highlight on press
                             : '#FDECEA' // maroon highlight on press
                           : 'transparent',
                       },
@@ -144,21 +144,21 @@ const ProfileScreen = () => {
                         style={[
                           styles.switchIconCircle,
                           {
-                            backgroundColor: switchFreelancer ? '#FEF9C3' : '#FDECEA',
+                            backgroundColor: switchFreelancer ? '#DCFCE7' : '#FDECEA',
                           },
                         ]}
                       >
                         <Ionicons
                           name={switchFreelancer ? 'briefcase-outline' : 'school-outline'}
                           size={18}
-                          color={switchFreelancer ? '#B8860B' : '#8B0000'}
+                          color={switchFreelancer ? '#1A5C38' : '#8B0000'}
                         />
                       </View>
                       <View>
                         <Text
                           style={[
                             styles.switchRowTitle,
-                            { color: switchFreelancer ? '#8B6914' : '#8B0000' },
+                            { color: switchFreelancer ? '#1A5C38' : '#8B0000' },
                           ]}
                         >
                           {item}
@@ -173,7 +173,7 @@ const ProfileScreen = () => {
                     <Ionicons
                       name="chevron-forward"
                       size={18}
-                      color={switchFreelancer ? '#B8860B' : '#8B0000'}
+                      color={switchFreelancer ? '#1A5C38' : '#8B0000'}
                     />
                   </Pressable>
                 );
@@ -190,7 +190,7 @@ const ProfileScreen = () => {
                   <Ionicons
                     name="chevron-forward"
                     size={18}
-                    color={isFreelancer ? '#8B6914' : '#8B0000'}
+                    color={isFreelancer ? '#1A5C38' : '#8B0000'}
                   />
                 </Pressable>
               );
@@ -204,11 +204,11 @@ const ProfileScreen = () => {
             onPress={() => signOut()}
             style={({ pressed }) => [
               styles.logoutRow,
-              { backgroundColor: isFreelancer ? '#FEF3C7' : '#FDECEA' },
+              { backgroundColor: isFreelancer ? '#DCFCE7' : '#FDECEA' },
               pressed && styles.pressed,
             ]}
           >
-            <Text style={[styles.logoutText, { color: isFreelancer ? '#8B6914' : '#8B0000' }]}>
+            <Text style={[styles.logoutText, { color: isFreelancer ? '#1A5C38' : '#8B0000' }]}>
               Logout
             </Text>
           </Pressable>
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   reputationCard: {
-    backgroundColor: '#FEF9C3',
-    borderColor: '#E8DDA8',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
     borderWidth: 1,
     borderRadius: 14,
     padding: 14,
@@ -280,12 +280,12 @@ const styles = StyleSheet.create({
   },
   reputationLabel: {
     fontSize: 13,
-    color: '#8B6914',
+    color: '#1A5C38',
     fontWeight: '600',
   },
   reputationBadgePill: {
-    backgroundColor: '#FEF9C3',
-    borderColor: '#E8DDA8',
+    backgroundColor: '#DCFCE7',
+    borderColor: '#BBF7D0',
     borderWidth: 1,
     borderRadius: 999,
     paddingHorizontal: 8,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   reputationBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#7A5C10',
+    color: '#14532D',
   },
   scoreRow: {
     flexDirection: 'row',
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   },
   scoreSubLabel: {
     fontSize: 12,
-    color: '#8B6914',
+    color: '#1A5C38',
     fontWeight: '500',
   },
 

@@ -50,7 +50,7 @@ const HomeScreen = () => {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'Ongoing':
-        return { bg: '#FEF9C3', text: '#7A5C10' }; // gold
+        return { bg: '#DCFCE7', text: '#14532D' }; // forest
       case 'Pending':
         return { bg: '#FEF3C7', text: '#92400E' }; // amber
       case 'Done':
@@ -221,7 +221,7 @@ const HomeScreen = () => {
   /* ================= FREELANCER DASHBOARD SCREEN ================= */
   const renderFreelancerDashboard = () => {
     return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: '#FFFBEB' }]}>
+      <SafeAreaView style={[styles.safe, { backgroundColor: '#F0FDF4' }]}>
         <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
           {/* HEADER */}
           <View style={styles.freelancerHeader}>
@@ -237,10 +237,10 @@ const HomeScreen = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Notifications"
                 onPress={() => {}}
-                style={({ pressed }) => [styles.bellCircle, { backgroundColor: '#FFFDF0', borderColor: '#EDE8C8', borderWidth: 1 }, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.bellCircle, { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0', borderWidth: 1 }, pressed && styles.pressed]}
               >
-                <Ionicons name="notifications-outline" size={20} color="#8B6914" />
-                <View style={[styles.badgeDot, { backgroundColor: '#8B6914' }]} />
+                <Ionicons name="notifications-outline" size={20} color="#1A5C38" />
+                <View style={[styles.badgeDot, { backgroundColor: '#1A5C38' }]} />
               </Pressable>
             </View>
           </View>
@@ -254,7 +254,7 @@ const HomeScreen = () => {
             <Switch
               value={isOnline}
               onValueChange={setIsOnline}
-              trackColor={{ true: '#B8860B', false: '#E5E5E7' }}
+              trackColor={{ true: '#1A5C38', false: '#E5E5E7' }}
               thumbColor="#FFFFFF"
             />
           </View>
@@ -287,7 +287,7 @@ const HomeScreen = () => {
               <View style={styles.statCol}>
                 <Text style={styles.statLabel}>Rating</Text>
                 <View style={styles.starRow}>
-                  <Ionicons name="star" size={13} color="#B8860B" />
+                  <Ionicons name="star" size={13} color="#1A5C38" />
                   <Text style={styles.statValue}>4.9</Text>
                 </View>
               </View>
@@ -316,7 +316,7 @@ const HomeScreen = () => {
               onPress={() => router.push('/(tabs)/services')}
             >
               <View style={styles.quickIconCircle}>
-                <Ionicons name="add-circle-outline" size={20} color="#8B6914" />
+                <Ionicons name="add-circle-outline" size={20} color="#1A5C38" />
               </View>
               <Text style={styles.quickActionLabel}>Add Service</Text>
             </Pressable>
@@ -328,7 +328,7 @@ const HomeScreen = () => {
               onPress={() => router.push('/(tabs)/errands')}
             >
               <View style={styles.quickIconCircle}>
-                <Ionicons name="search-outline" size={20} color="#8B6914" />
+                <Ionicons name="search-outline" size={20} color="#1A5C38" />
               </View>
               <Text style={styles.quickActionLabel}>Find Errands</Text>
             </Pressable>
@@ -340,7 +340,7 @@ const HomeScreen = () => {
               onPress={() => router.push('/(tabs)/messages')}
             >
               <View style={styles.quickIconCircle}>
-                <Ionicons name="chatbubble-outline" size={20} color="#8B6914" />
+                <Ionicons name="chatbubble-outline" size={20} color="#1A5C38" />
               </View>
               <Text style={styles.quickActionLabel}>Chats</Text>
             </Pressable>
@@ -354,7 +354,7 @@ const HomeScreen = () => {
               accessibilityLabel="See all active orders"
               onPress={() => {}}
             >
-              <Text style={[styles.seeAll, { color: '#8B6914' }]}>See all</Text>
+              <Text style={[styles.seeAll, { color: '#1A5C38' }]}>See all</Text>
             </Pressable>
           </View>
 
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#EDE8C8',
+    borderBottomColor: '#E5E5E7',
   },
   freelancerGreeting: {
     fontSize: 22,
@@ -494,8 +494,8 @@ const styles = StyleSheet.create({
 
   /* Earnings Summary Card */
   earningsCard: {
-    backgroundColor: '#FEF9C3',
-    borderColor: '#E8DDA8',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   },
   earningsLabel: {
     fontSize: 13,
-    color: '#8B6914',
+    color: '#1A5C38',
     fontWeight: '500',
   },
   earningsAmount: {
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   },
   earningsDivider: {
     height: 1,
-    backgroundColor: '#E8DDA8',
+    backgroundColor: '#BBF7D0',
     marginVertical: 14,
   },
   statsRow: {
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 11,
-    color: '#8B6914',
+    color: '#1A5C38',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: 24,
-    backgroundColor: '#E8DDA8',
+    backgroundColor: '#BBF7D0',
   },
 
   /* Active Orders Alert Banner */
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: '#F0FDF4',
     alignItems: 'center',
     justifyContent: 'center',
   },

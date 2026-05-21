@@ -21,26 +21,26 @@ const config: Record<TrustBadgeType, {
   verified: {
     label: 'Verified Student',
     icon: 'check-decagram',
-    background: Colors.verifiedBg,
-    color: Colors.verified,
+    background: '#DCFCE7',
+    color: '#14532D',
   },
   'top-tutor': {
     label: 'Top Tutor',
     icon: 'star-circle',
-    background: Colors.goldBg,
-    color: Colors.gold,
+    background: '#DCFCE7',
+    color: '#14532D',
   },
   trusted: {
     label: 'Trusted',
     icon: 'shield-check',
-    background: Colors.surfaceAlt,
-    color: Colors.textSecondary,
+    background: '#DCFCE7',
+    color: '#14532D',
   },
   reliable: {
     label: 'Reliable',
     icon: 'check-circle',
-    background: Colors.surfaceAlt,
-    color: Colors.textSecondary,
+    background: '#DCFCE7',
+    color: '#14532D',
   },
 };
 

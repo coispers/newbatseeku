@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
@@ -11,6 +12,7 @@ import { ErrandCard } from '../../components/home/ErrandCard';
 const filters = ['All', 'Food', 'Printing', 'Library', 'Supplies'];
 
 const ErrandsScreen = () => {
+  const router = useRouter();
   const { user } = useAuth();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
   const isFreelancer = user?.role === 'freelancer';
@@ -18,11 +20,15 @@ const ErrandsScreen = () => {
   const [selected, setSelected] = useState('All');
 
   const filtered = useMemo(() => {
+    const scoped = isFreelancer
+      ? errands
+      : errands.filter((item) => item.ownerId === user?.id);
+
     if (selected === 'All') {
-      return errands;
+      return scoped;
     }
-    return errands.filter((item) => item.category === selected);
-  }, [selected]);
+    return scoped.filter((item) => item.category === selected);
+  }, [isFreelancer, selected, user?.id]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: Colors.background }]}>
@@ -33,23 +39,22 @@ const ErrandsScreen = () => {
         ListHeaderComponent={
           <View>
             <View style={styles.header}>
-              <Text style={styles.title}>Errands</Text>
-              
-              {/* ROLE-AWARE PRIMARY CTA */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={isFreelancer ? "Find Errands" : "Post Errand"}
-                onPress={() => {}}
-                style={({ pressed }) => [
-                  styles.postButton,
-                  { backgroundColor: Colors.primary },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <Text style={styles.postText}>
-                  {isFreelancer ? "Find Errands" : "Post Errand"}
-                </Text>
-              </Pressable>
+              <Text style={styles.title}>{isFreelancer ? 'Find Errands' : 'My Errands'}</Text>
+
+              {!isFreelancer && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Post Errand"
+                  onPress={() => router.push('/errands/create')}
+                  style={({ pressed }) => [
+                    styles.postButton,
+                    { backgroundColor: Colors.primary },
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={styles.postText}>Post Errand</Text>
+                </Pressable>
+              )}
             </View>
 
             <View style={styles.filterRow}>

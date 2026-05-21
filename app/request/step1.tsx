@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Colors } from '../../constants/colors';
 import { Radius, Shadow, Spacing } from '../../constants/theme';
+import { freelancers } from '../../constants/mock-data';
+import { Avatar } from '../../components/ui/Avatar';
 
 const categories: Array<{ id: string; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }> = [
   { id: 'tutoring', label: 'Tutoring', icon: 'school' },
@@ -29,14 +31,40 @@ const urgencies = ['Normal', 'Urgent', 'ASAP'];
 
 const Step1Screen = () => {
   const router = useRouter();
+  const { freelancerId } = useLocalSearchParams<{ freelancerId?: string }>();
   const [selectedCategory, setSelectedCategory] = useState('tutoring');
   const [urgency, setUrgency] = useState('Normal');
+
+  const selectedTutor = freelancerId
+    ? freelancers.find((item) => item.id === freelancerId)
+    : undefined;
 
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          onPress={() => router.back()}
+          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+        >
+          <Ionicons name="chevron-back" size={18} color={Colors.textPrimary} />
+          <Text style={styles.backText}>Back</Text>
+        </Pressable>
+
         <Text style={styles.progress}>Step 1 of 4</Text>
         <Text style={styles.title}>What do you need help with?</Text>
+
+        {selectedTutor && (
+          <View style={styles.selectedTutorCard}>
+            <Avatar initials={selectedTutor.avatar} size={44} />
+            <View style={styles.selectedTutorInfo}>
+              <Text style={styles.selectedTutorTitle}>Requesting</Text>
+              <Text style={styles.selectedTutorName}>{selectedTutor.name}</Text>
+              <Text style={styles.selectedTutorMeta}>{selectedTutor.expertise[0]}</Text>
+            </View>
+          </View>
+        )}
 
         <FlatList
           data={categories}
@@ -121,7 +149,12 @@ const Step1Screen = () => {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Continue"
-          onPress={() => router.push('/request/step2')}
+          onPress={() =>
+            router.push({
+              pathname: '/request/step2',
+              params: freelancerId ? { freelancerId } : undefined,
+            })
+          }
           style={({ pressed }) => [styles.continueButton, pressed && styles.pressed]}
         >
           <Text style={styles.continueText}>Continue</Text>
@@ -143,6 +176,17 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: 12,
     color: Colors.textMuted,
+    marginTop: Spacing.sm,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  backText: {
+    fontSize: 13,
+    color: Colors.textPrimary,
+    fontWeight: '600',
   },
   title: {
     fontSize: 22,
@@ -152,6 +196,36 @@ const styles = StyleSheet.create({
   },
   categoryGrid: {
     marginTop: Spacing.md,
+  },
+  selectedTutorCard: {
+    marginTop: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    ...(Shadow || {}),
+  },
+  selectedTutorInfo: {
+    flex: 1,
+  },
+  selectedTutorTitle: {
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  selectedTutorName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginTop: 2,
+  },
+  selectedTutorMeta: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   categoryRow: {
     justifyContent: 'space-between',
