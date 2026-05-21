@@ -9,7 +9,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useOrders } from '../../hooks/useOrders';
 import { ErrandCard } from '../../components/home/ErrandCard';
 
-const filters = ['All', 'Food', 'Printing', 'Library', 'Supplies'];
+const defaultFilters = ['All'];
 
 const timeSince = (value: string) => {
   const createdAt = new Date(value).getTime();
@@ -37,14 +37,20 @@ const ErrandsScreen = () => {
 
   const [selected, setSelected] = useState('All');
 
-  const filtered = useMemo(() => {
-    const scoped = orders.filter((item) => item.kind === 'errand');
-    const visible = isFreelancer ? scoped : scoped.filter((item) => item.requesterId === user?.id);
+  const filters = useMemo(() => {
+    const cats = orders.map((o) => (o.kind === 'errand' ? 'Errand' : o.category));
+    return Array.from(new Set([...defaultFilters, ...cats]));
+  }, [orders]);
 
-    if (selected === 'All') {
-      return visible;
-    }
-    return visible.filter((item) => item.category === selected);
+  const filtered = useMemo(() => {
+    // Freelancers see open requests across kinds; students see their own posted requests
+    const scoped = isFreelancer ? orders.filter((o) => o.status === 'Requests') : orders.filter((o) => o.requesterId === user?.id);
+
+    if (selected === 'All') return scoped;
+
+    if (selected === 'Errand') return scoped.filter((o) => o.kind === 'errand');
+
+    return scoped.filter((o) => String(o.category).toLowerCase() === String(selected).toLowerCase());
   }, [isFreelancer, orders, selected, user?.id]);
 
   const handleErrandAction = async (itemId: string) => {
@@ -64,20 +70,20 @@ const ErrandsScreen = () => {
         ListHeaderComponent={
           <View>
             <View style={styles.header}>
-              <Text style={styles.title}>{isFreelancer ? 'Find Errands' : 'My Errands'}</Text>
+              <Text style={styles.title}>{isFreelancer ? 'Available Requests' : 'Request Wall'}</Text>
 
               {!isFreelancer && (
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Post Errand"
-                  onPress={() => router.push('/errands/create')}
+                  accessibilityLabel="Post Request"
+                  onPress={() => router.push('/request/step1')}
                   style={({ pressed }) => [
                     styles.postButton,
                     { backgroundColor: Colors.primary },
                     pressed && styles.pressed,
                   ]}
                 >
-                  <Text style={styles.postText}>Post Errand</Text>
+                  <Text style={styles.postText}>Post Request</Text>
                 </Pressable>
               )}
             </View>
