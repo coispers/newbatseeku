@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "newbatseeku",
-    "slug": "newbatseeku",
+    "name": "BatSeekU",
+    "slug": "batseeku",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,6 +11,11 @@
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
+    },
+    "scheme": "batseeku",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
     },
     "ios": {
       "supportsTablet": true

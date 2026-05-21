@@ -1,7 +1,7 @@
 {
-  "name": "newbatseeku",
+  "name": "batseeku",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -9,10 +9,28 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.2.3",
+    "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~54.0.33",
+    "expo-image": "~3.0.11",
+    "expo-router": "~3.5.24",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~3.31.1",
+    "react-native-web": "^0.21.0"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "babel-preset-expo": "^55.0.22",
+    "typescript": "~5.9.2"
+    },
+    "overrides": {
+      "react": "19.1.0",
+      "react-dom": "19.1.0"
+    }
 }
