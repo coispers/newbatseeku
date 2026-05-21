@@ -6,15 +6,43 @@ import { AppText as Text } from '../../components/ui/AppText';
 
 import { Colors } from '../../constants/colors';
 import { Radius, Shadow, Spacing } from '../../constants/theme';
+import { useAuth } from '../../hooks/useAuth';
+import { useOrders } from '../../hooks/useOrders';
 
 const categories = ['Food', 'Printing', 'Library', 'Supplies'];
 
 const CreateErrandScreen = () => {
   const router = useRouter();
+  const { user } = useAuth();
+  const { createErrandOrder } = useOrders();
   const [title, setTitle] = useState('');
   const [budget, setBudget] = useState('');
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState(categories[0]);
+
+  const handleSubmit = async () => {
+    if (!user) {
+      return;
+    }
+
+    const order = await createErrandOrder({
+      title: title.trim() || 'New errand request',
+      budget: Number(budget) || 0,
+      location: location.trim() || 'BatStateU',
+      category,
+      details: title.trim(),
+      requesterId: user.id,
+      requesterName: user.name,
+      requesterAvatar: user.name
+        .split(' ')
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase(),
+    });
+
+    router.replace(`/order/${order.id}`);
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -86,7 +114,7 @@ const CreateErrandScreen = () => {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Submit errand"
-          onPress={() => router.replace('/(tabs)/errands')}
+          onPress={handleSubmit}
           style={({ pressed }) => [styles.submitButton, pressed && styles.pressed]}
         >
           <Text style={styles.submitText}>Post Errand</Text>

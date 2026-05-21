@@ -4,6 +4,7 @@ import { SplashScreen, Stack, useRootNavigationState, useRouter, useSegments } f
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 
 import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { OrdersProvider } from '../hooks/useOrders';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -60,7 +61,9 @@ const RootLayout = () => {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RootLayoutNavigator />
+        <OrdersProvider>
+          <RootLayoutNavigator />
+        </OrdersProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

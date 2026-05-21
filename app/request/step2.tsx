@@ -10,12 +10,21 @@ import { freelancers } from '../../constants/mock-data';
 import { Radius, Shadow, Spacing } from '../../constants/theme';
 import { Avatar } from '../../components/ui/Avatar';
 import { PaymentCard } from '../../components/ui/PaymentCard';
+import { useAuth } from '../../hooks/useAuth';
+import { useOrders } from '../../hooks/useOrders';
 
 const payments = ['GCash', 'Cash', 'Wallet'];
 
 const Step2Screen = () => {
   const router = useRouter();
-  const { freelancerId } = useLocalSearchParams<{ freelancerId?: string }>();
+  const { freelancerId, category, urgency, details } = useLocalSearchParams<{
+    freelancerId?: string;
+    category?: string;
+    urgency?: string;
+    details?: string;
+  }>();
+  const { user } = useAuth();
+  const { createServiceOrder } = useOrders();
   const [method, setMethod] = useState('GCash');
 
   const selectedTutor = freelancerId
@@ -27,6 +36,10 @@ const Step2Screen = () => {
   }, []);
 
   const platformFee = Math.round(estimate * 0.1);
+
+  const categoryLabel = Array.isArray(category) ? category[0] : category;
+  const detailsValue = Array.isArray(details) ? details[0] : details;
+  const urgencyValue = Array.isArray(urgency) ? urgency[0] : urgency;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -107,12 +120,40 @@ const Step2Screen = () => {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={selectedTutor ? 'Send request' : 'Confirm and find tutor'}
-          onPress={() =>
+          onPress={async () => {
+            if (!user) {
+              return;
+            }
+
+            const order = await createServiceOrder({
+              title: detailsValue?.trim() || `${categoryLabel ?? 'Service'} help request`,
+              details: detailsValue?.trim() || `Need help with ${categoryLabel ?? 'service'}.`,
+              category: categoryLabel ?? 'Tutoring',
+              budget: estimate,
+              location: 'BatStateU',
+              urgency: urgencyValue,
+              paymentMethod: method,
+              requesterId: user.id,
+              requesterName: user.name,
+              requesterAvatar: user.name
+                .split(' ')
+                .map((part) => part[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase(),
+              freelancerId: freelancerId ?? undefined,
+              freelancerName: selectedTutor?.name,
+              freelancerAvatar: selectedTutor?.avatar,
+            });
+
             router.push({
               pathname: '/request/step3',
-              params: freelancerId ? { freelancerId } : undefined,
-            })
-          }
+              params: {
+                ...(freelancerId ? { freelancerId } : {}),
+                orderId: order.id,
+              },
+            });
+          }}
           style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}
         >
           <Text style={styles.confirmText}>

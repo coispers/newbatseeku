@@ -2,13 +2,23 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 
 import { Colors } from '../constants/colors';
 import { Radius, Shadow, Spacing } from '../constants/theme';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useOrders } from '../hooks/useOrders';
+
+const currency = (v: number) => `₱${v}`;
 
 const ReceiptScreen = () => {
   const router = useRouter();
+  const { orderId } = useLocalSearchParams<{ orderId?: string }>();
+  const { orders } = useOrders();
+
+  const order = orderId ? orders.find((o) => o.id === orderId) : orders.find((o) => o.status === 'Finished');
+  const serviceFee = order?.budget ?? 200;
+  const platformFee = Math.round(serviceFee * 0.1);
+  const total = serviceFee + platformFee;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -17,37 +27,37 @@ const ReceiptScreen = () => {
 
         <View style={styles.card}>
           <Text style={styles.rowLabel}>Receipt #</Text>
-          <Text style={styles.rowValue}>BSU-2026-0412</Text>
+          <Text style={styles.rowValue}>{order ? order.id : 'BSU-2026-XXXX'}</Text>
 
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Date</Text>
-            <Text style={styles.rowValue}>May 21, 2026</Text>
+            <Text style={styles.rowValue}>{order ? new Date(order.createdAt).toLocaleDateString() : 'May 21, 2026'}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Student</Text>
-            <Text style={styles.rowValue}>Juan Dela Cruz</Text>
+            <Text style={styles.rowValue}>{order?.requesterName ?? 'Juan Dela Cruz'}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Tutor</Text>
-            <Text style={styles.rowValue}>Andrea Cruz</Text>
+            <Text style={styles.rowValue}>{order?.freelancerName ?? 'Andrea Cruz'}</Text>
           </View>
 
           <View style={styles.divider} />
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Service fee</Text>
-            <Text style={styles.rowValue}>₱200</Text>
+            <Text style={styles.rowValue}>{currency(serviceFee)}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>BatSeekU fee</Text>
-            <Text style={styles.rowValue}>₱15</Text>
+            <Text style={styles.rowValue}>{currency(platformFee)}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>₱215</Text>
+            <Text style={styles.totalValue}>{currency(total)}</Text>
           </View>
 
           <View style={styles.statusPill}>
-            <Text style={styles.statusText}>Completed</Text>
+            <Text style={styles.statusText}>{order?.status ?? 'Completed'}</Text>
           </View>
         </View>
 

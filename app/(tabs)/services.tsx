@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { freelancers } from '../../constants/mock-data';
+import { useOrders } from '../../hooks/useOrders';
 import { FilterChip } from '../../components/services/FilterChip';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { Avatar } from '../../components/ui/Avatar';
@@ -17,36 +18,27 @@ import { Button } from '../../components/ui/Button';
 const studentFilters = ['All', 'Tutoring', 'Programming', 'Math', 'Science', 'Thesis', 'Lab', 'Review'];
 const orderFilters = ['Requests', 'Ongoing', 'Finished'];
 
-const mockOrders = [
-  {
-    id: 'o1',
-    title: 'Calculus problem set help',
-    requester: 'Juan Dela Cruz',
-    budget: 200,
-    status: 'Requests',
-    time: '10m ago',
-  },
-  {
-    id: 'o2',
-    title: 'Thesis formatting review',
-    requester: 'Lia Santos',
-    budget: 350,
-    status: 'Ongoing',
-    time: 'Due today',
-  },
-  {
-    id: 'o3',
-    title: 'Physics lab report edits',
-    requester: 'Marco Reyes',
-    budget: 180,
-    status: 'Finished',
-    time: 'Completed yesterday',
-  },
-];
+const timeSince = (value: string) => {
+  const createdAt = new Date(value).getTime();
+  const diffMinutes = Math.max(1, Math.round((Date.now() - createdAt) / 60000));
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  return `${diffDays}d ago`;
+};
 
 const ServicesScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const { orders } = useOrders();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
   const isFreelancer = user?.role === 'freelancer';
 
@@ -58,7 +50,7 @@ const ServicesScreen = () => {
 
   const filtered = useMemo(() => {
     if (isFreelancer) {
-      return mockOrders.filter((item) => item.status === selected);
+      return orders.filter((item) => item.status === selected);
     }
     if (selected === 'All') {
       return freelancers;
@@ -75,7 +67,7 @@ const ServicesScreen = () => {
         ListHeaderComponent={
           <View>
             <View style={styles.headerRow}>
-              <Text style={styles.title}>{isFreelancer ? 'Orders' : 'Services'}</Text>
+              <Text style={styles.title}>{isFreelancer ? 'Tasks' : 'Services'}</Text>
 
               {/* Show primary CTA only for students (Find Nearby Help) */}
               {!isFreelancer && (
@@ -111,19 +103,28 @@ const ServicesScreen = () => {
         }
         renderItem={({ item }) =>
           isFreelancer ? (
-            <View style={styles.card}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View progress for ${item.title}`}
+              onPress={() => router.push(`/order/${item.id}`)}
+              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+            >
               <View style={styles.orderHeader}>
                 <Text style={styles.orderTitle}>{item.title}</Text>
                 <View style={[styles.orderStatus, { backgroundColor: Colors.primaryLight }]}>
                   <Text style={[styles.orderStatusText, { color: Colors.primary }]}>{item.status}</Text>
                 </View>
               </View>
-              <Text style={styles.orderMeta}>Requested by {item.requester}</Text>
+              <Text style={styles.orderMeta}>Requested by {item.requesterName}</Text>
               <View style={styles.orderFooter}>
                 <Text style={styles.orderBudget}>₱{item.budget}</Text>
-                <Text style={styles.orderTime}>{item.time}</Text>
+                <Text style={styles.orderTime}>{timeSince(item.createdAt)}</Text>
               </View>
-            </View>
+              <View style={styles.orderActionRow}>
+                <Text style={styles.orderActionText}>View progress</Text>
+                <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+              </View>
+            </Pressable>
           ) : (
             <View style={styles.card}>
               <View style={styles.cardRow}>
@@ -214,6 +215,9 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5E7',
     padding: 16,
     marginBottom: 16,
+  },
+  cardPressed: {
+    opacity: 0.85,
   },
   cardRow: {
     flexDirection: 'row',
@@ -312,6 +316,18 @@ const styles = StyleSheet.create({
   orderTime: {
     fontSize: 12,
     color: '#6B6B6B',
+  },
+  orderActionRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+  },
+  orderActionText: {
+    fontSize: 12,
+    color: '#1A5C38',
+    fontWeight: '600',
   },
   cardActions: {
     flexDirection: 'row',

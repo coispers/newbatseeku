@@ -1,22 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View, ActivityIndicator } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import * as Location from 'expo-location';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { freelancers } from '../../constants/mock-data';
+import { useOrders } from '../../hooks/useOrders';
+
+const distanceBetweenKm = (start: { latitude: number; longitude: number }, end: { latitude: number; longitude: number }) => {
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const deltaLat = toRadians(end.latitude - start.latitude);
+  const deltaLon = toRadians(end.longitude - start.longitude);
+  const a =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(toRadians(start.latitude)) * Math.cos(toRadians(end.latitude)) * Math.sin(deltaLon / 2) ** 2;
+  return 2 * earthRadiusKm * Math.asin(Math.sqrt(a));
+};
 
 const InstantHelpScreen = () => {
+  const router = useRouter();
   const { user } = useAuth();
+  const { orderId } = useLocalSearchParams<{ orderId?: string }>();
+  const { getOrderById } = useOrders();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
   
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [nearbyHelpers, setNearbyHelpers] = useState(freelancers);
+
+  const postedOrder = useMemo(() => (orderId ? getOrderById(orderId) : undefined), [getOrderById, orderId]);
 
   useEffect(() => {
     getLocationAndNearbyHelpers();
@@ -41,11 +59,15 @@ const InstantHelpScreen = () => {
       const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation(currentLocation);
 
-      // Sort freelancers by their simulated distance (mock data)
-      // In production, you'd calculate actual distance using coordinates
-      const sortedHelpers = [...freelancers].sort((a, b) => {
-        // Simulate distance calculation - mock data shows helpers in order
-        return 0;
+      const availableHelpers = freelancers.filter((item) => item.isOnline && item.isAvailable);
+      const sortedHelpers = [...availableHelpers].sort((a, b) => {
+        if (!currentLocation) {
+          return b.rating - a.rating;
+        }
+
+        const aDistance = distanceBetweenKm(currentLocation.coords, { latitude: a.latitude, longitude: a.longitude });
+        const bDistance = distanceBetweenKm(currentLocation.coords, { latitude: b.latitude, longitude: b.longitude });
+        return aDistance - bDistance;
       });
 
       setNearbyHelpers(sortedHelpers);
@@ -53,7 +75,7 @@ const InstantHelpScreen = () => {
     } catch (error) {
       console.log('Location error:', error);
       setErrorMsg('Could not get your location');
-      setNearbyHelpers(freelancers);
+      setNearbyHelpers(freelancers.filter((item) => item.isOnline && item.isAvailable));
     } finally {
       setLoading(false);
     }
@@ -64,9 +86,9 @@ const InstantHelpScreen = () => {
       style={[
         styles.card,
         {
-          backgroundColor: Colors.card,
+          backgroundColor: Colors.white,
           borderColor: Colors.border,
-          ...Shadow.md,
+          ...(Shadow || {}),
         },
       ]}
     >
@@ -133,7 +155,7 @@ const InstantHelpScreen = () => {
               <View>
                 <Text style={styles.title}>Find Help</Text>
                 <Text style={[styles.subtitle, { color: Colors.textSecondary }]}>
-                  {location ? 'Showing helpers near you' : 'Showing all available helpers'}
+                  {location ? 'Showing nearby available helpers' : 'Showing available helpers'}
                 </Text>
               </View>
               
@@ -150,6 +172,28 @@ const InstantHelpScreen = () => {
                 <Ionicons name="refresh-outline" size={18} color="#FFFFFF" />
               </Pressable>
             </View>
+
+            {postedOrder && (
+              <View style={[styles.requestCard, { backgroundColor: Colors.white, borderColor: Colors.border, ...(Shadow || {}) }]}>
+                <View style={styles.requestTop}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.requestLabel}>Current request</Text>
+                    <Text style={styles.requestTitle}>{postedOrder.title}</Text>
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="View progress"
+                    onPress={() => router.push(`/order/${postedOrder.id}`)}
+                    style={({ pressed }) => [styles.progressButton, pressed && styles.pressed]}
+                  >
+                    <Text style={styles.progressButtonText}>Progress</Text>
+                  </Pressable>
+                </View>
+                <Text style={[styles.requestMeta, { color: Colors.textSecondary }]}>
+                  {postedOrder.category} • {postedOrder.urgency ?? 'Normal'} • ₱{postedOrder.budget}
+                </Text>
+              </View>
+            )}
 
             {errorMsg && (
               <View style={[styles.errorBanner, { backgroundColor: Colors.error + '20' }]}>
@@ -205,6 +249,43 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
+  },
+  requestCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+    padding: 12,
+  },
+  requestTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    alignItems: 'center',
+  },
+  requestLabel: {
+    fontSize: 11,
+    color: '#6B6B6B',
+  },
+  requestTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginTop: 2,
+  },
+  requestMeta: {
+    fontSize: 12,
+    marginTop: 8,
+  },
+  progressButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#F0F0F2',
+  },
+  progressButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1A1A1A',
   },
   refreshButton: {
     width: 40,

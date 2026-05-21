@@ -7,18 +7,23 @@ import { useRouter } from 'expo-router';
 
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
+import { useOrders } from '../../hooks/useOrders';
 import { Avatar } from '../../components/ui/Avatar';
 
 const ProfileScreen = () => {
   const router = useRouter();
   const { user, signOut, switchRole } = useAuth();
+  const { orders } = useOrders();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
 
   const isFreelancer = user?.role === 'freelancer';
 
   // Actions map
   const actions: Record<string, () => void> = {
-    'Active Requests': () => router.push('/request/step1'),
+    'Active Requests': () => {
+      const latestOrder = orders[0];
+      router.push(latestOrder ? `/order/${latestOrder.id}` : '/request/step1');
+    },
     'Transaction History': () => router.push('/receipt'),
     Earnings: () => { },
     'Switch to Freelancer Mode': async () => {

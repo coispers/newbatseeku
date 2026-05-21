@@ -6,29 +6,54 @@ import { useRouter } from 'expo-router';
 
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { errands } from '../../constants/mock-data';
+import { useOrders } from '../../hooks/useOrders';
 import { ErrandCard } from '../../components/home/ErrandCard';
 
 const filters = ['All', 'Food', 'Printing', 'Library', 'Supplies'];
 
+const timeSince = (value: string) => {
+  const createdAt = new Date(value).getTime();
+  const diffMinutes = Math.max(1, Math.round((Date.now() - createdAt) / 60000));
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  return `${diffDays}d ago`;
+};
+
 const ErrandsScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const { orders, acceptOrder } = useOrders();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
   const isFreelancer = user?.role === 'freelancer';
 
   const [selected, setSelected] = useState('All');
 
   const filtered = useMemo(() => {
-    const scoped = isFreelancer
-      ? errands
-      : errands.filter((item) => item.ownerId === user?.id);
+    const scoped = orders.filter((item) => item.kind === 'errand');
+    const visible = isFreelancer ? scoped : scoped.filter((item) => item.requesterId === user?.id);
 
     if (selected === 'All') {
-      return scoped;
+      return visible;
     }
-    return scoped.filter((item) => item.category === selected);
-  }, [isFreelancer, selected, user?.id]);
+    return visible.filter((item) => item.category === selected);
+  }, [isFreelancer, orders, selected, user?.id]);
+
+  const handleErrandAction = async (itemId: string) => {
+    if (isFreelancer && user) {
+      await acceptOrder(itemId, user.id);
+    }
+
+    router.push(`/order/${itemId}`);
+  };
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: Colors.background }]}>
@@ -93,8 +118,9 @@ const ErrandsScreen = () => {
             title={item.title}
             budget={item.budget}
             location={item.location}
-            timeAgo={item.timeAgo}
-            onAccept={() => {}}
+            timeAgo={timeSince(item.createdAt)}
+            actionLabel={isFreelancer ? 'Accept' : 'View progress'}
+            onAccept={() => handleErrandAction(item.id)}
           />
         )}
       />

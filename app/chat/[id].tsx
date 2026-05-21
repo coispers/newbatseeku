@@ -14,6 +14,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Colors } from '../../constants/colors';
 import { chats, messages } from '../../constants/mock-data';
+import { useOrders } from '../../hooks/useOrders';
+import { useAuth } from '../../hooks/useAuth';
 import { Radius, Shadow, Spacing } from '../../constants/theme';
 import { Avatar } from '../../components/ui/Avatar';
 import { ChatBubble } from '../../components/messages/ChatBubble';
@@ -58,6 +60,16 @@ const ChatScreen = () => {
 
   const chat = chats.find((item) => item.id === id) || chats[0];
   const chatMessages = useMemo(() => messages.filter((item) => item.chatId === chat.id), [chat.id]);
+  const { orders } = useOrders();
+  const { user } = useAuth();
+
+  const relatedOrder = useMemo(() => {
+    // Try to find an active order involving the chat participant and the current user
+    return orders.find((o) =>
+      ((o.requesterName === chat.name && o.freelancerName === user?.name) ||
+        (o.freelancerName === chat.name && o.requesterName === user?.name))
+    );
+  }, [orders, chat.name, user?.name]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -78,17 +90,34 @@ const ChatScreen = () => {
       </View>
 
       {showContext ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Hide service context"
-          onPress={() => setShowContext(false)}
-          style={({ pressed }) => [styles.contextBar, pressed && styles.pressed]}
-        >
-          <Text style={styles.contextText}>Service: Programming Assistance</Text>
-          <View style={styles.contextPill}>
-            <Text style={styles.contextPillText}>Active</Text>
+        relatedOrder ? (
+          <View style={styles.contextBar}>
+            <View>
+              <Text style={styles.contextText}>{relatedOrder.title}</Text>
+              <Text style={styles.contextPillText}>{relatedOrder.status}</Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="View order progress"
+              onPress={() => router.push(`/order/${relatedOrder.id}`)}
+              style={({ pressed }) => [styles.progressButton, pressed && styles.pressed]}
+            >
+              <Text style={styles.contextPillText}>Progress</Text>
+            </Pressable>
           </View>
-        </Pressable>
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Hide service context"
+            onPress={() => setShowContext(false)}
+            style={({ pressed }) => [styles.contextBar, pressed && styles.pressed]}
+          >
+            <Text style={styles.contextText}>Service: Programming Assistance</Text>
+            <View style={styles.contextPill}>
+              <Text style={styles.contextPillText}>Active</Text>
+            </View>
+          </Pressable>
+        )
       ) : (
         <Pressable
           accessibilityRole="button"

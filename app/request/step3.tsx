@@ -11,7 +11,7 @@ import { freelancers } from '../../constants/mock-data';
 
 const Step3Screen = () => {
   const router = useRouter();
-  const { freelancerId } = useLocalSearchParams<{ freelancerId?: string }>();
+  const { freelancerId, orderId } = useLocalSearchParams<{ freelancerId?: string; orderId?: string }>();
   const scale = useRef(new Animated.Value(1)).current;
 
   const selectedTutor = freelancerId
@@ -30,7 +30,10 @@ const Step3Screen = () => {
     const timer = setTimeout(() => {
       router.replace({
         pathname: '/request/step4',
-        params: freelancerId ? { freelancerId } : undefined,
+        params: {
+          ...(freelancerId ? { freelancerId } : {}),
+          ...(orderId ? { orderId } : {}),
+        },
       });
     }, 3000);
 

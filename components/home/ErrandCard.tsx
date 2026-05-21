@@ -10,10 +10,11 @@ type ErrandCardProps = {
   budget: number;
   location: string;
   timeAgo: string;
+  actionLabel?: string;
   onAccept: () => void;
 };
 
-export const ErrandCard = ({ title, budget, location, timeAgo, onAccept }: ErrandCardProps) => {
+export const ErrandCard = ({ title, budget, location, timeAgo, actionLabel = 'Accept', onAccept }: ErrandCardProps) => {
   const { Colors } = useTheme();
 
   return (
@@ -35,7 +36,7 @@ export const ErrandCard = ({ title, budget, location, timeAgo, onAccept }: Erran
           pressed && styles.pressed,
         ]}
       >
-        <Text style={styles.acceptText}>Accept</Text>
+        <Text style={styles.acceptText}>{actionLabel}</Text>
       </Pressable>
     </View>
   );

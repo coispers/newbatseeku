@@ -131,7 +131,7 @@ const FreelancerProfileScreen = () => {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Request service"
-          onPress={() => router.push('/request/step1')}
+          onPress={() => router.push({ pathname: '/request/step1', params: { freelancerId: id } })}
           style={({ pressed }) => [styles.requestButton, pressed && styles.pressed]}
         >
           <Text style={styles.requestText}>Request Service</Text>

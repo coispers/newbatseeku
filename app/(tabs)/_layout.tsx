@@ -40,12 +40,23 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="services"
         options={{
-          title: isFreelancer ? 'Orders' : 'Services',
+          title: isFreelancer ? 'Tasks' : 'Services',
           tabBarIcon: ({ color, size }: { color: string; size: number }) => (
             <Ionicons name={isFreelancer ? "clipboard-outline" : "grid-outline"} color={color} size={size} />
           ),
         }}
       />
+      {user && user.role !== 'freelancer' && (
+        <Tabs.Screen
+          name="student-orders"
+          options={{
+            title: 'Orders',
+            tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+              <Ionicons name="clipboard-outline" color={color} size={size} />
+            ),
+          }}
+        />
+      )}
       <Tabs.Screen
         name="errands"
         options={{

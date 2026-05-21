@@ -8,6 +8,7 @@ export type Freelancer = {
   rating: number;
   price: number;
   isOnline: boolean;
+  isAvailable: boolean;
   isVerified: boolean;
   completedJobs: number;
   reputationLabel: string;
@@ -15,6 +16,8 @@ export type Freelancer = {
   avatar: string;
   responseRate: string;
   memberSince: string;
+  latitude: number;
+  longitude: number;
 };
 
 export type Errand = {
@@ -70,6 +73,7 @@ export const freelancers: Freelancer[] = [
     rating: 4.9,
     price: 180,
     isOnline: true,
+    isAvailable: true,
     isVerified: true,
     completedJobs: 128,
     reputationLabel: 'Top Tutor',
@@ -77,6 +81,8 @@ export const freelancers: Freelancer[] = [
     avatar: 'AC',
     responseRate: '96%',
     memberSince: '2023',
+    latitude: 13.7565,
+    longitude: 121.0583,
   },
   {
     id: 'f2',
@@ -86,6 +92,7 @@ export const freelancers: Freelancer[] = [
     rating: 4.7,
     price: 150,
     isOnline: false,
+    isAvailable: false,
     isVerified: true,
     completedJobs: 84,
     reputationLabel: 'Trusted',
@@ -93,6 +100,8 @@ export const freelancers: Freelancer[] = [
     avatar: 'MR',
     responseRate: '91%',
     memberSince: '2022',
+    latitude: 13.7592,
+    longitude: 121.0612,
   },
   {
     id: 'f3',
@@ -102,6 +111,7 @@ export const freelancers: Freelancer[] = [
     rating: 4.8,
     price: 160,
     isOnline: true,
+    isAvailable: true,
     isVerified: false,
     completedJobs: 61,
     reputationLabel: 'Reliable',
@@ -109,6 +119,8 @@ export const freelancers: Freelancer[] = [
     avatar: 'JT',
     responseRate: '93%',
     memberSince: '2024',
+    latitude: 13.7539,
+    longitude: 121.0549,
   },
   {
     id: 'f4',
@@ -118,6 +130,7 @@ export const freelancers: Freelancer[] = [
     rating: 4.6,
     price: 170,
     isOnline: true,
+    isAvailable: true,
     isVerified: true,
     completedJobs: 102,
     reputationLabel: 'Verified',
@@ -125,6 +138,8 @@ export const freelancers: Freelancer[] = [
     avatar: 'PL',
     responseRate: '90%',
     memberSince: '2021',
+    latitude: 13.7487,
+    longitude: 121.0561,
   },
   {
     id: 'f5',
@@ -134,6 +149,7 @@ export const freelancers: Freelancer[] = [
     rating: 4.5,
     price: 140,
     isOnline: false,
+    isAvailable: false,
     isVerified: false,
     completedJobs: 54,
     reputationLabel: 'Reliable',
@@ -141,6 +157,8 @@ export const freelancers: Freelancer[] = [
     avatar: 'LS',
     responseRate: '88%',
     memberSince: '2023',
+    latitude: 13.7511,
+    longitude: 121.0635,
   },
   {
     id: 'f6',
@@ -150,6 +168,7 @@ export const freelancers: Freelancer[] = [
     rating: 4.9,
     price: 190,
     isOnline: true,
+    isAvailable: true,
     isVerified: true,
     completedJobs: 140,
     reputationLabel: 'Top Tutor',
@@ -157,6 +176,8 @@ export const freelancers: Freelancer[] = [
     avatar: 'NG',
     responseRate: '98%',
     memberSince: '2020',
+    latitude: 13.7579,
+    longitude: 121.0506,
   },
 ];
 

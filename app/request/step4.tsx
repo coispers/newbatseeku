@@ -12,7 +12,7 @@ import { freelancers } from '../../constants/mock-data';
 
 const Step4Screen = () => {
   const router = useRouter();
-  const { freelancerId } = useLocalSearchParams<{ freelancerId?: string }>();
+  const { freelancerId, orderId } = useLocalSearchParams<{ freelancerId?: string; orderId?: string }>();
   const fade = useRef(new Animated.Value(0)).current;
 
   const selectedTutor = freelancerId
@@ -28,12 +28,12 @@ const Step4Screen = () => {
       <View style={styles.container}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Confirm"
-          onPress={() => router.replace('/(tabs)')}
+          accessibilityLabel="View progress"
+          onPress={() => router.replace(orderId ? `/order/${orderId}` : '/(tabs)')}
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
         >
           <Ionicons name="checkmark" size={18} color={Colors.textPrimary} />
-          <Text style={styles.backText}>Okay</Text>
+          <Text style={styles.backText}>View Progress</Text>
         </Pressable>
 
         <Text style={styles.progress}>Step 4 of 4</Text>

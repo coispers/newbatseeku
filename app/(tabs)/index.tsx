@@ -5,6 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { useAuth } from '../../hooks/useAuth';
+import { useOrders } from '../../hooks/useOrders';
 import { useTheme } from '../../hooks/useTheme';
 import { categories, freelancers, popularServices } from '../../constants/mock-data';
 import { CategoryCard } from '../../components/home/CategoryCard';
@@ -16,6 +17,7 @@ import { AppText as Text } from '../../components/ui/AppText';
 const HomeScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const { orders } = useOrders();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
 
   const isFreelancer = user?.role === 'freelancer';
@@ -36,14 +38,9 @@ const HomeScreen = () => {
     []
   );
 
-  // Freelancer mock orders
-  const mockOrders = useMemo(
-    () => [
-      { id: 'o1', title: 'Calculus Review Session', student: 'Noel G.', date: 'Today, 3:00 PM', status: 'Ongoing' },
-      { id: 'o2', title: 'Java Programming Help', student: 'Juan D.', date: 'Tomorrow, 10:00 AM', status: 'Pending' },
-      { id: 'o3', title: 'Thesis Formatting Assist', student: 'Maria C.', date: 'Completed May 20', status: 'Done' },
-    ],
-    []
+  const activeOrders = useMemo(
+    () => orders.filter((item) => item.status !== 'Finished').slice(0, 3),
+    [orders]
   );
 
   // Helper: Status Pill Color Mapping
@@ -51,9 +48,9 @@ const HomeScreen = () => {
     switch (status) {
       case 'Ongoing':
         return { bg: '#DCFCE7', text: '#14532D' }; // forest
-      case 'Pending':
+      case 'Requests':
         return { bg: '#FEF3C7', text: '#92400E' }; // amber
-      case 'Done':
+      case 'Finished':
       default:
         return { bg: '#DCFCE7', text: '#166534' }; // green
     }
@@ -301,7 +298,7 @@ const HomeScreen = () => {
           >
             <View style={styles.alertLeft}>
               <Ionicons name="alert-circle-outline" size={20} color="#FFFFFF" />
-              <Text style={styles.alertText}>You have 2 active requests</Text>
+              <Text style={styles.alertText}>You have {activeOrders.length} active requests</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
           </Pressable>
@@ -358,20 +355,26 @@ const HomeScreen = () => {
             </Pressable>
           </View>
 
-          {mockOrders.map((order) => {
+          {activeOrders.map((order) => {
             const statusTheme = getStatusStyle(order.status);
             return (
-              <View key={order.id} style={styles.orderCard}>
+              <Pressable
+                key={order.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Open order ${order.title}`}
+                onPress={() => router.push(`/order/${order.id}`)}
+                style={({ pressed }) => [styles.orderCard, pressed && styles.pressed]}
+              >
                 <View style={styles.orderTop}>
                   <View style={styles.orderInfo}>
                     <Text style={styles.orderTitle}>{order.title}</Text>
-                    <Text style={styles.orderClient}>Client: {order.student} • {order.date}</Text>
+                    <Text style={styles.orderClient}>Client: {order.requesterName} • {new Date(order.createdAt).toLocaleDateString()}</Text>
                   </View>
                   <View style={[styles.statusPill, { backgroundColor: statusTheme.bg }]}>
                     <Text style={[styles.statusText, { color: statusTheme.text }]}>{order.status}</Text>
                   </View>
                 </View>
-              </View>
+              </Pressable>
             );
           })}
         </ScrollView>

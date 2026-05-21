@@ -34,6 +34,7 @@ const Step1Screen = () => {
   const { freelancerId } = useLocalSearchParams<{ freelancerId?: string }>();
   const [selectedCategory, setSelectedCategory] = useState('tutoring');
   const [urgency, setUrgency] = useState('Normal');
+  const [details, setDetails] = useState('');
 
   const selectedTutor = freelancerId
     ? freelancers.find((item) => item.id === freelancerId)
@@ -96,6 +97,8 @@ const Step1Screen = () => {
         />
 
         <TextInput
+          value={details}
+          onChangeText={setDetails}
           placeholder="Describe your problem"
           placeholderTextColor={Colors.textMuted}
           multiline
@@ -152,7 +155,12 @@ const Step1Screen = () => {
           onPress={() =>
             router.push({
               pathname: '/request/step2',
-              params: freelancerId ? { freelancerId } : undefined,
+              params: {
+                ...(freelancerId ? { freelancerId } : {}),
+                category: selectedCategory,
+                urgency,
+                details,
+              },
             })
           }
           style={({ pressed }) => [styles.continueButton, pressed && styles.pressed]}
