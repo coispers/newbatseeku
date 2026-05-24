@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 
+type TabIconProps = { color: string; size: number };
+
 const TabsLayout = () => {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
@@ -32,7 +34,7 @@ const TabsLayout = () => {
         name="index"
         options={{
           title: isFreelancer ? 'Dashboard' : 'Home',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Ionicons name={isFreelancer ? "stats-chart-outline" : "home-outline"} color={color} size={size} />
           ),
         }}
@@ -41,42 +43,46 @@ const TabsLayout = () => {
         name="services"
         options={{
           title: isFreelancer ? 'Tasks' : 'Services',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Ionicons name={isFreelancer ? "clipboard-outline" : "grid-outline"} color={color} size={size} />
           ),
         }}
       />
-      {user && user.role !== 'freelancer' && (
-        <Tabs.Screen
-          name="student-orders"
-          options={{
-            title: 'Orders',
-            tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-              <Ionicons name="clipboard-outline" color={color} size={size} />
-            ),
-          }}
-        />
-      )}
+      {/* ✅ Always render, hide via href */}
+      <Tabs.Screen
+        name="student-orders"
+        options={{
+          title: 'Orders',
+          href: isFreelancer ? null : undefined,
+          tabBarIcon: ({ color, size }: TabIconProps) => (
+            <Ionicons name="clipboard-outline" color={color} size={size} />
+          ),
+        }}
+      />
       <Tabs.Screen
         name="errands"
         options={{
           title: 'Errands',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ionicons name="bicycle-outline" color={color} size={size} />,
+          tabBarIcon: ({ color, size }: TabIconProps) => (
+            <Ionicons name="bicycle-outline" color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
         name="instant-help"
         options={{
           title: 'Find Help',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ionicons name="location-outline" color={color} size={size} />,
           href: null,
+          tabBarIcon: ({ color, size }: TabIconProps) => (
+            <Ionicons name="location-outline" color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
           title: 'Messages',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+          tabBarIcon: ({ color, size }: TabIconProps) => (
             <Ionicons name="chatbubble-outline" color={color} size={size} />
           ),
         }}
@@ -85,7 +91,9 @@ const TabsLayout = () => {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ionicons name="person-outline" color={color} size={size} />,
+          tabBarIcon: ({ color, size }: TabIconProps) => (
+            <Ionicons name="person-outline" color={color} size={size} />
+          ),
         }}
       />
     </Tabs>
@@ -93,4 +101,3 @@ const TabsLayout = () => {
 };
 
 export default TabsLayout;
-

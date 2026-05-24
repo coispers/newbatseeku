@@ -28,7 +28,7 @@ const InstantHelpScreen = () => {
   const { orderId } = useLocalSearchParams<{ orderId?: string }>();
   const { getOrderById } = useOrders();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
-  
+
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -43,10 +43,10 @@ const InstantHelpScreen = () => {
   const getLocationAndNearbyHelpers = async () => {
     try {
       setLoading(true);
-      
+
       // Request location permissions
       let { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied');
         // Show all helpers anyway if permission denied
@@ -96,7 +96,7 @@ const InstantHelpScreen = () => {
         <View style={styles.headerRow}>
           <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
           {item.isOnline && (
-            <View style={[styles.onlineBadge, { backgroundColor: Colors.success }]}>
+            <View style={[styles.onlineBadge, { backgroundColor: Colors.primary }]}>
               <View style={styles.onlineDot} />
             </View>
           )}
@@ -134,7 +134,7 @@ const InstantHelpScreen = () => {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: Colors.background }]}>
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size={36} color={Colors.primary} />
           <Text style={[styles.loadingText, { color: Colors.textSecondary, marginTop: 12 }]}>
             Finding nearby helpers...
           </Text>
@@ -158,7 +158,7 @@ const InstantHelpScreen = () => {
                   {location ? 'Showing nearby available helpers' : 'Showing available helpers'}
                 </Text>
               </View>
-              
+
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Refresh location"
