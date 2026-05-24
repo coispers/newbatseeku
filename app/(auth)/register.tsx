@@ -15,11 +15,59 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/colors';
 import { Radius, Shadow, Spacing } from '../../constants/theme';
 import { Button } from '../../components/ui/Button';
+import { useAuth } from '../../hooks/useAuth';
 
 const RegisterScreen = () => {
   const router = useRouter();
+  const { signUp } = useAuth();
   const [role, setRole] = useState<'student' | 'freelancer'>('student');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [course, setCourse] = useState('');
+  const [error, setError] = useState('');
+
+  const handleRegister = async () => {
+    setError('');
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const trimmedName = fullName.trim();
+
+    if (!acceptedTerms) {
+      setError('Please accept the terms and privacy policy.');
+      return;
+    }
+
+    if (!trimmedName) {
+      setError('Please enter your full name.');
+      return;
+    }
+
+    if (!normalizedEmail) {
+      setError('Please enter your university email.');
+      return;
+    }
+
+    if (!password) {
+      setError('Please enter a password.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    const result = await signUp(normalizedEmail, password, trimmedName, role, course);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+
+    router.replace('/(auth)/login');
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -39,6 +87,8 @@ const RegisterScreen = () => {
             placeholder="Full name"
             placeholderTextColor={Colors.textMuted}
             style={styles.input}
+            value={fullName}
+            onChangeText={setFullName}
           />
           <TextInput
             placeholder="University email"
@@ -46,23 +96,31 @@ const RegisterScreen = () => {
             style={styles.input}
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
           />
           <TextInput
             placeholder="Password"
             placeholderTextColor={Colors.textMuted}
             style={styles.input}
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
           <TextInput
             placeholder="Confirm password"
             placeholderTextColor={Colors.textMuted}
             style={styles.input}
             secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
           <TextInput
             placeholder="Course / program"
             placeholderTextColor={Colors.textMuted}
             style={styles.input}
+            value={course}
+            onChangeText={setCourse}
           />
 
           <View style={styles.roleRow}>
@@ -98,7 +156,9 @@ const RegisterScreen = () => {
             <Text style={styles.termsText}>I accept the terms and privacy policy</Text>
           </Pressable>
 
-          <Button label="Create Account" onPress={() => router.replace('/(auth)/login')} />
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <Button label="Create Account" onPress={handleRegister} />
 
           <Pressable
             accessibilityRole="button"
@@ -195,6 +255,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     flex: 1,
+  },
+  error: {
+    color: Colors.primaryDark,
+    fontSize: 12,
+    marginBottom: Spacing.sm,
   },
   link: {
     alignItems: 'center',

@@ -12,7 +12,7 @@ import { Avatar } from '../../components/ui/Avatar';
 
 const ProfileScreen = () => {
   const router = useRouter();
-  const { user, signOut, switchRole } = useAuth();
+  const { user, signOut } = useAuth();
   const { orders } = useOrders();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
 
@@ -26,12 +26,6 @@ const ProfileScreen = () => {
     },
     'Transaction History': () => router.push('/receipt'),
     Earnings: () => { },
-    'Switch to Freelancer Mode': async () => {
-      await switchRole('freelancer');
-    },
-    'Switch to Student Mode': async () => {
-      await switchRole('student');
-    },
     Premium: () => router.push('/premium'),
     Settings: () => { },
     Help: () => { },
@@ -42,7 +36,6 @@ const ProfileScreen = () => {
     'Active Requests',
     'Transaction History',
     isFreelancer ? 'Earnings' : null,
-    isFreelancer ? 'Switch to Student Mode' : 'Switch to Freelancer Mode',
     'Premium',
     'Settings',
     'Help',

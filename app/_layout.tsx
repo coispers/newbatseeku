@@ -3,7 +3,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SplashScreen, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 
-import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { AuthProvider } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { OrdersProvider } from '../hooks/useOrders';
 
 SplashScreen.preventAutoHideAsync();
