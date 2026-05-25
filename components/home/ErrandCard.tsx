@@ -18,7 +18,12 @@ export const ErrandCard = ({ title, budget, location, timeAgo, actionLabel = 'Ac
   const { Colors } = useTheme();
 
   return (
-    <View style={styles.card}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Open errand"
+      onPress={onAccept}
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+    >
       <View style={styles.row}>
         <View style={styles.info}>
           <Text style={styles.title}>{title}</Text>
@@ -38,7 +43,7 @@ export const ErrandCard = ({ title, budget, location, timeAgo, actionLabel = 'Ac
       >
         <Text style={styles.acceptText}>{actionLabel}</Text>
       </Pressable>
-    </View>
+    </Pressable>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -12,6 +12,7 @@ import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 import { Colors } from '../../constants/colors';
 import { Radius, Shadow, Spacing } from '../../constants/theme';
@@ -25,9 +26,11 @@ const categories: Array<{ id: string; label: string; icon: keyof typeof Material
   { id: 'lab', label: 'Lab', icon: 'flask' },
   { id: 'thesis', label: 'Thesis', icon: 'file-document' },
   { id: 'research', label: 'Research', icon: 'magnify' },
+  { id: 'quick', label: 'Quick Errands', icon: 'clock' },
 ];
 
 const urgencies = ['Normal', 'Urgent', 'ASAP'];
+const durationPresets = ['2 hours', '1 day', '1 week', 'Custom'];
 
 const Step1Screen = () => {
   const router = useRouter();
@@ -35,10 +38,58 @@ const Step1Screen = () => {
   const [selectedCategory, setSelectedCategory] = useState('tutoring');
   const [urgency, setUrgency] = useState('Normal');
   const [details, setDetails] = useState('');
+  const [durationPreset, setDurationPreset] = useState('2 hours');
+  const [customDuration, setCustomDuration] = useState('');
+
+  const isQuickErrand = selectedCategory === 'quick';
 
   const selectedTutor = freelancerId
     ? freelancers.find((item) => item.id === freelancerId)
     : undefined;
+
+  useEffect(() => {
+    if (isQuickErrand) {
+      setUrgency('ASAP');
+    }
+  }, [isQuickErrand]);
+
+  useEffect(() => {
+    if (!isQuickErrand) {
+      return;
+    }
+
+    if (durationPreset === '1 day' || durationPreset === '1 week') {
+      setDurationPreset('2 hours');
+    }
+  }, [durationPreset, isQuickErrand]);
+
+  const handleContinue = () => {
+    if (!selectedCategory) {
+      Toast.show({ type: 'error', text1: 'Please select a category.' });
+      return;
+    }
+
+    if (!details.trim()) {
+      Toast.show({ type: 'error', text1: 'Please describe your request.' });
+      return;
+    }
+
+    if (!urgency) {
+      Toast.show({ type: 'error', text1: 'Please select an urgency level.' });
+      return;
+    }
+
+    router.push({
+      pathname: '/request/step2',
+      params: {
+        ...(freelancerId ? { freelancerId } : {}),
+        category: selectedCategory,
+        urgency,
+        details,
+        duration: durationPreset === 'Custom' ? customDuration : durationPreset,
+      },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -128,9 +179,11 @@ const Step1Screen = () => {
               accessibilityRole="button"
               accessibilityLabel={item}
               onPress={() => setUrgency(item)}
+              disabled={isQuickErrand && item !== 'ASAP'}
               style={({ pressed }) => [
                 styles.urgencyPill,
                 urgency === item && styles.urgencySelected,
+                isQuickErrand && item !== 'ASAP' && styles.urgencyDisabled,
                 pressed && styles.pressed,
               ]}
             >
@@ -139,30 +192,53 @@ const Step1Screen = () => {
           )}
         />
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Select deadline"
-          onPress={() => {}}
-          style={({ pressed }) => [styles.deadlineRow, pressed && styles.pressed]}
-        >
-          <MaterialCommunityIcons name="calendar" size={18} color={Colors.textMuted} />
-          <Text style={styles.deadlineText}>Set deadline</Text>
-        </Pressable>
+        <Text style={styles.sectionTitle}>Duration</Text>
+        <FlatList
+          data={durationPresets}
+          horizontal
+          keyExtractor={(item) => item}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.durationRow}
+          ItemSeparatorComponent={() => <View style={styles.durationSeparator} />}
+          renderItem={({ item }) => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={item}
+              onPress={() => setDurationPreset(item)}
+              disabled={isQuickErrand && (item === '1 day' || item === '1 week')}
+              style={({ pressed }) => [
+                styles.durationPill,
+                durationPreset === item && styles.durationSelected,
+                isQuickErrand && (item === '1 day' || item === '1 week') && styles.durationDisabled,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.durationText,
+                  durationPreset === item && styles.durationTextSelected,
+                ]}
+              >
+                {item}
+              </Text>
+            </Pressable>
+          )}
+        />
+
+        {durationPreset === 'Custom' && (
+          <TextInput
+            value={customDuration}
+            onChangeText={setCustomDuration}
+            placeholder="Enter custom duration"
+            placeholderTextColor={Colors.textMuted}
+            style={styles.customDurationInput}
+          />
+        )}
 
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Continue"
-          onPress={() =>
-            router.push({
-              pathname: '/request/step2',
-              params: {
-                ...(freelancerId ? { freelancerId } : {}),
-                category: selectedCategory,
-                urgency,
-                details,
-              },
-            })
-          }
+          onPress={handleContinue}
           style={({ pressed }) => [styles.continueButton, pressed && styles.pressed]}
         >
           <Text style={styles.continueText}>Continue</Text>
@@ -307,6 +383,9 @@ const styles = StyleSheet.create({
   urgencySelected: {
     backgroundColor: Colors.primary,
   },
+  urgencyDisabled: {
+    opacity: 0.5,
+  },
   urgencyText: {
     fontSize: 13,
     color: Colors.textSecondary,
@@ -315,15 +394,43 @@ const styles = StyleSheet.create({
   urgencyTextSelected: {
     color: Colors.white,
   },
-  deadlineRow: {
-    marginTop: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
+  durationRow: {
+    marginTop: Spacing.sm,
   },
-  deadlineText: {
-    color: Colors.textSecondary,
+  durationSeparator: {
+    width: Spacing.sm,
+  },
+  durationPill: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.full,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    minWidth: 88,
+    alignItems: 'center',
+  },
+  durationSelected: {
+    backgroundColor: Colors.primary,
+  },
+  durationDisabled: {
+    opacity: 0.5,
+  },
+  durationText: {
     fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  durationTextSelected: {
+    color: Colors.white,
+  },
+  customDurationInput: {
+    marginTop: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    color: Colors.textPrimary,
   },
   continueButton: {
     marginTop: Spacing.xl,

@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 
 import { Colors } from '../../constants/colors';
 import { freelancers } from '../../constants/mock-data';
@@ -11,35 +12,38 @@ import { Radius, Shadow, Spacing } from '../../constants/theme';
 import { Avatar } from '../../components/ui/Avatar';
 import { PaymentCard } from '../../components/ui/PaymentCard';
 import { useAuth } from '../../hooks/useAuth';
-import { useOrders } from '../../hooks/useOrders';
+import { supabase } from '../../lib/supabase';
 
 const payments = ['GCash', 'Cash', 'Wallet'];
 
 const Step2Screen = () => {
   const router = useRouter();
-  const { freelancerId, category, urgency, details } = useLocalSearchParams<{
+  const { freelancerId, category, urgency, details, duration } = useLocalSearchParams<{
     freelancerId?: string;
     category?: string;
     urgency?: string;
     details?: string;
+    duration?: string;
   }>();
   const { user } = useAuth();
-  const { createServiceOrder } = useOrders();
   const [method, setMethod] = useState('GCash');
+  const [estimateInput, setEstimateInput] = useState('200');
 
   const selectedTutor = freelancerId
     ? freelancers.find((item) => item.id === freelancerId)
     : undefined;
 
   const estimate = useMemo(() => {
-    return 200;
-  }, []);
+    const value = Number(estimateInput.replace(/[^0-9.]/g, ''));
+    return Number.isFinite(value) ? Math.max(0, value) : 0;
+  }, [estimateInput]);
 
   const platformFee = Math.round(estimate * 0.1);
 
   const categoryLabel = Array.isArray(category) ? category[0] : category;
   const detailsValue = Array.isArray(details) ? details[0] : details;
   const urgencyValue = Array.isArray(urgency) ? urgency[0] : urgency;
+  const durationValue = Array.isArray(duration) ? duration[0] : duration;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -62,6 +66,15 @@ const Step2Screen = () => {
           <Text style={styles.estimateValue}>₱{estimate}</Text>
         </View>
 
+        <TextInput
+          value={estimateInput}
+          onChangeText={setEstimateInput}
+          placeholder="Enter estimated price"
+          placeholderTextColor={Colors.textMuted}
+          keyboardType="numeric"
+          style={styles.estimateInput}
+        />
+
         {selectedTutor ? (
           <View>
             <Text style={styles.sectionTitle}>Selected tutor</Text>
@@ -73,24 +86,7 @@ const Step2Screen = () => {
               </View>
             </View>
           </View>
-        ) : (
-          <View>
-            <Text style={styles.sectionTitle}>Suggested tutors</Text>
-            <FlatList
-              data={freelancers.slice(0, 3)}
-              horizontal
-              keyExtractor={(item) => item.id}
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <View style={styles.tutorCard}>
-                  <Avatar initials={item.avatar} size={44} />
-                  <Text style={styles.tutorName}>{item.name}</Text>
-                  <Text style={styles.tutorMeta}>{item.expertise[0]}</Text>
-                </View>
-              )}
-            />
-          </View>
-        )}
+        ) : null}
 
         <Text style={styles.sectionTitle}>Payment method</Text>
         <FlatList
@@ -119,46 +115,37 @@ const Step2Screen = () => {
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={selectedTutor ? 'Send request' : 'Confirm and find tutor'}
+          accessibilityLabel="Post errand"
           onPress={async () => {
             if (!user) {
+              Toast.show({ type: 'error', text1: 'Please log in to post an errand.' });
               return;
             }
 
-            const order = await createServiceOrder({
-              title: detailsValue?.trim() || `${categoryLabel ?? 'Service'} help request`,
-              details: detailsValue?.trim() || `Need help with ${categoryLabel ?? 'service'}.`,
+            const { error } = await supabase.from('errands').insert({
+              requester_id: user.id,
+              requester_name: user.name,
               category: categoryLabel ?? 'Tutoring',
+              description: detailsValue?.trim() || `Need help with ${categoryLabel ?? 'service'}.`,
+              urgency: urgencyValue ?? 'Normal',
+              duration: durationValue ?? '2 hours',
               budget: estimate,
-              location: 'BatStateU',
-              urgency: urgencyValue,
-              paymentMethod: method,
-              requesterId: user.id,
-              requesterName: user.name,
-              requesterAvatar: user.name
-                .split(' ')
-                .map((part) => part[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase(),
-              freelancerId: freelancerId ?? undefined,
-              freelancerName: selectedTutor?.name,
-              freelancerAvatar: selectedTutor?.avatar,
+              payment_method: method,
+              status: 'open',
+              freelancer_id: freelancerId ?? null,
             });
 
-            router.push({
-              pathname: '/request/step3',
-              params: {
-                ...(freelancerId ? { freelancerId } : {}),
-                orderId: order.id,
-              },
-            });
+            if (error) {
+              console.error('Errand insert failed:', error);
+              return;
+            }
+
+            Toast.show({ type: 'success', text1: 'Errand posted.' });
+            router.replace('/(tabs)/errands');
           }}
           style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}
         >
-          <Text style={styles.confirmText}>
-            {selectedTutor ? 'Send Request' : 'Confirm & Find Tutor'}
-          </Text>
+          <Text style={styles.confirmText}>Post Errand</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -203,6 +190,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     padding: Spacing.lg,
     ...(Shadow || {}),
+  },
+  estimateInput: {
+    marginTop: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    color: Colors.textPrimary,
   },
   estimateLabel: {
     fontSize: 13,

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,8 +6,8 @@ import { useRouter } from 'expo-router';
 
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
-import { useOrders } from '../../hooks/useOrders';
 import { ErrandCard } from '../../components/home/ErrandCard';
+import { supabase } from '../../lib/supabase';
 
 const defaultFilters = ['All'];
 
@@ -28,36 +28,76 @@ const timeSince = (value: string) => {
   return `${diffDays}d ago`;
 };
 
+type RemoteErrand = {
+  id: string;
+  requester_id: string;
+  requester_name: string;
+  category: string | null;
+  description: string | null;
+  urgency: string | null;
+  duration: string | null;
+  budget: number | null;
+  payment_method: string | null;
+  status: string | null;
+  freelancer_id: string | null;
+  created_at: string | null;
+};
+
 const ErrandsScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const { orders, acceptOrder } = useOrders();
   const { Colors, Spacing, Radius, Shadow } = useTheme();
   const isFreelancer = user?.role === 'freelancer';
 
+  const [errands, setErrands] = useState<RemoteErrand[]>([]);
   const [selected, setSelected] = useState('All');
 
+  useEffect(() => {
+    let isActive = true;
+
+    const loadErrands = async () => {
+      const { data, error } = await supabase
+        .from('errands')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!isActive) return;
+
+      if (error) {
+        console.error('Failed to load errands:', error);
+        setErrands([]);
+        return;
+      }
+
+      setErrands((data ?? []) as RemoteErrand[]);
+    };
+
+    loadErrands();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const filters = useMemo(() => {
-    const cats = orders.map((o) => (o.kind === 'errand' ? 'Errand' : o.category));
+    const cats = errands
+      .map((o) => o.category ?? 'Other')
+      .filter((cat) => String(cat).trim().length > 0);
     return Array.from(new Set([...defaultFilters, ...cats]));
-  }, [orders]);
+  }, [errands]);
 
   const filtered = useMemo(() => {
-    // Freelancers see open requests across kinds; students see their own posted requests
-    const scoped = isFreelancer ? orders.filter((o) => o.status === 'Requests') : orders.filter((o) => o.requesterId === user?.id);
+    // Freelancers see open requests; students see their own posted requests
+    const scoped = isFreelancer
+      ? errands.filter((o) => o.status === 'open')
+      : errands.filter((o) => o.requester_id === user?.id);
 
     if (selected === 'All') return scoped;
 
-    if (selected === 'Errand') return scoped.filter((o) => o.kind === 'errand');
-
     return scoped.filter((o) => String(o.category).toLowerCase() === String(selected).toLowerCase());
-  }, [isFreelancer, orders, selected, user?.id]);
+  }, [errands, isFreelancer, selected, user?.id]);
 
   const handleErrandAction = async (itemId: string) => {
-    if (isFreelancer && user) {
-      await acceptOrder(itemId, user.id);
-    }
-
     router.push(`/order/${itemId}`);
   };
 
@@ -121,10 +161,10 @@ const ErrandsScreen = () => {
         }
         renderItem={({ item }) => (
           <ErrandCard
-            title={item.title}
-            budget={item.budget}
-            location={item.location}
-            timeAgo={timeSince(item.createdAt)}
+            title={item.description ?? `${item.category ?? 'Errand'} request`}
+            budget={item.budget ?? 0}
+            location="BatStateU"
+            timeAgo={timeSince(item.created_at ?? new Date().toISOString())}
             actionLabel={isFreelancer ? 'Accept' : 'View progress'}
             onAccept={() => handleErrandAction(item.id)}
           />

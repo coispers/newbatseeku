@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SplashScreen, Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
+import Toast from 'react-native-toast-message';
 
 import { AuthProvider } from '../context/AuthContext';
 import { useAuth } from '../hooks/useAuth';
@@ -66,6 +67,7 @@ const RootLayout = () => {
           <RootLayoutNavigator />
         </OrdersProvider>
       </AuthProvider>
+      <Toast />
     </SafeAreaProvider>
   );
 };
