@@ -159,7 +159,7 @@ const Step1Screen = () => {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Add file"
-          onPress={() => {}}
+          onPress={() => { }}
           style={({ pressed }) => [styles.attachRow, pressed && styles.pressed]}
         >
           <MaterialCommunityIcons name="paperclip" size={18} color={Colors.textMuted} />
