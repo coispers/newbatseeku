@@ -32,6 +32,63 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const STORAGE_REMEMBER = 'batseeku:remember';
 const STORAGE_REMEMBER_EMAIL = 'batseeku:rememberEmail';
 
+type FreelancerProfileRow = {
+    id: string;
+    full_name: string;
+    avatar: string;
+    course: string;
+    university: string;
+    is_verified: boolean;
+    is_top_tutor: boolean;
+    rating: number;
+    completed_jobs: number;
+    response_rate: number;
+    member_since: number;
+    campus_reputation: number;
+    about: string;
+    expertise: string;
+    portfolio: null;
+    base_price: number;
+};
+
+const buildFreelancerProfile = (userId: string, fullName: string, university: string): FreelancerProfileRow => {
+    const initials = fullName
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+
+    return {
+        id: userId,
+        full_name: fullName,
+        avatar: initials || 'FT',
+        course: 'BS Computer Science',
+        university,
+        is_verified: true,
+        is_top_tutor: true,
+        rating: 4.9,
+        completed_jobs: 128,
+        response_rate: 96,
+        member_since: 2026,
+        campus_reputation: 92,
+        about: 'Experienced student freelancer ready to help you succeed!',
+        expertise: JSON.stringify(['Programming', 'Math', 'Thesis']),
+        portfolio: null,
+        base_price: 180,
+    };
+};
+
+const ensureFreelancerProfile = async (userId: string, fullName: string, university: string) => {
+    const profile = buildFreelancerProfile(userId, fullName, university);
+    const { error } = await supabase.from('freelancer_profiles').upsert(profile, {
+        onConflict: 'id',
+    });
+
+    return error ? error.message : null;
+};
+
 const toAuthUser = (user: User): AuthUser => ({
     id: user.id,
     email: user.email ?? '',
@@ -69,6 +126,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 const nextSession = data.session ?? null;
                 setSession(nextSession);
                 setUser(nextSession?.user ? toAuthUser(nextSession.user) : null);
+
+                if (nextSession?.user?.user_metadata?.role === 'freelancer') {
+                    const university = nextSession.user.user_metadata?.university || 'Batangas State University';
+                    const profileError = await ensureFreelancerProfile(
+                        nextSession.user.id,
+                        nextSession.user.user_metadata?.full_name ?? nextSession.user.email ?? 'Freelancer',
+                        university
+                    );
+
+                    if (profileError) {
+                        console.error('Failed to ensure freelancer profile:', profileError);
+                    }
+                }
             } finally {
                 if (isActive) {
                     setIsLoading(false);
@@ -84,6 +154,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setSession(nextSession);
             setUser(nextSession?.user ? toAuthUser(nextSession.user) : null);
             setIsLoading(false);
+
+            if (nextSession?.user?.user_metadata?.role === 'freelancer') {
+                const university = nextSession.user.user_metadata?.university || 'Batangas State University';
+                ensureFreelancerProfile(
+                    nextSession.user.id,
+                    nextSession.user.user_metadata?.full_name ?? nextSession.user.email ?? 'Freelancer',
+                    university
+                ).catch((error) => {
+                    console.error('Failed to ensure freelancer profile after auth change:', error);
+                });
+            }
         });
 
         return () => {
@@ -148,7 +229,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 metadata.program = trimmedProgram;
             }
 
-            const { error } = await supabase.auth.signUp({
+            // Register user
+            const { data, error } = await supabase.auth.signUp({
                 email: normalizedEmail,
                 password,
                 options: {
@@ -156,7 +238,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 },
             });
 
-            return { error: error ? error.message : null };
+            if (error || !data.user) {
+                return { error: error ? error.message : 'Registration failed' };
+            }
+
+            // If freelancer, create profile
+            if (role === 'freelancer') {
+                const university = data.user.user_metadata?.university || 'Batangas State University';
+                const profileError = await ensureFreelancerProfile(data.user.id, trimmedName, university);
+
+                if (profileError) {
+                    return { error: profileError };
+                }
+            }
+
+            return { error: null };
         },
         []
     );

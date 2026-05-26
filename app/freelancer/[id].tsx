@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,11 +11,120 @@ import { Radius, Shadow, Spacing } from '../../constants/theme';
 import { Avatar } from '../../components/ui/Avatar';
 import { TrustBadge } from '../../components/ui/TrustBadge';
 import { ReputationScore } from '../../components/ui/ReputationScore';
+import { supabase } from '../../lib/supabase';
+
+type RemoteFreelancerProfile = {
+  id: string;
+  full_name: string;
+  avatar: string | null;
+  course: string | null;
+  university: string | null;
+  is_verified: boolean | null;
+  is_top_tutor: boolean | null;
+  rating: number | null;
+  completed_jobs: number | null;
+  response_rate: number | null;
+  member_since: number | null;
+  campus_reputation: number | null;
+  about: string | null;
+  expertise: string[] | string | null;
+  base_price: number | null;
+};
 
 const FreelancerProfileScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const freelancer = freelancers.find((item) => item.id === id) || freelancers[0];
+  const [remoteFreelancer, setRemoteFreelancer] = useState<RemoteFreelancerProfile | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    let isActive = true;
+
+    const loadFreelancer = async () => {
+      const { data, error } = await supabase
+        .from('freelancer_profiles')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (!isActive) return;
+
+      if (error) {
+        setRemoteFreelancer(null);
+        return;
+      }
+
+      setRemoteFreelancer(data as RemoteFreelancerProfile);
+    };
+
+    loadFreelancer();
+
+    return () => {
+      isActive = false;
+    };
+  }, [id]);
+
+  const fallbackFreelancer = freelancers.find((item) => item.id === id) || freelancers[0];
+
+  const parseExpertise = (value: RemoteFreelancerProfile['expertise']) => {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [value];
+      } catch {
+        return [value];
+      }
+    }
+
+    return [];
+  };
+
+  const freelancerView = useMemo(() => {
+    if (!remoteFreelancer) {
+      return {
+        id: fallbackFreelancer.id,
+        avatar: fallbackFreelancer.avatar,
+        name: fallbackFreelancer.name,
+        course: fallbackFreelancer.course,
+        university: 'Batangas State University',
+        isVerified: fallbackFreelancer.isVerified,
+        reputationLabel: fallbackFreelancer.reputationLabel,
+        rating: fallbackFreelancer.rating,
+        completedJobs: fallbackFreelancer.completedJobs,
+        responseRate: fallbackFreelancer.responseRate,
+        memberSince: fallbackFreelancer.memberSince,
+        campusReputation: 92,
+        bio: fallbackFreelancer.bio,
+        expertise: fallbackFreelancer.expertise,
+        price: fallbackFreelancer.price,
+      };
+    }
+
+    return {
+      id: remoteFreelancer.id,
+      avatar: remoteFreelancer.avatar ?? '??',
+      name: remoteFreelancer.full_name,
+      course: remoteFreelancer.course ?? 'BS Computer Science',
+      university: remoteFreelancer.university ?? 'Batangas State University',
+      isVerified: !!remoteFreelancer.is_verified,
+      reputationLabel: remoteFreelancer.is_top_tutor ? 'Top Tutor' : 'Reliable',
+      rating: remoteFreelancer.rating ?? 4.9,
+      completedJobs: remoteFreelancer.completed_jobs ?? 0,
+      responseRate: `${remoteFreelancer.response_rate ?? 0}%`,
+      memberSince: remoteFreelancer.member_since ?? 2026,
+      campusReputation: remoteFreelancer.campus_reputation ?? 0,
+      bio: remoteFreelancer.about ?? 'No bio provided yet.',
+      expertise: parseExpertise(remoteFreelancer.expertise),
+      price: remoteFreelancer.base_price ?? 0,
+    };
+  }, [fallbackFreelancer, remoteFreelancer]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -30,49 +139,49 @@ const FreelancerProfileScreen = () => {
         </Pressable>
 
         <View style={styles.hero}>
-          <Avatar initials={freelancer.avatar} size={80} />
-          <Text style={styles.name}>{freelancer.name}</Text>
-          <Text style={styles.course}>{freelancer.course} - Batangas State University</Text>
+          <Avatar initials={freelancerView.avatar} size={80} />
+          <Text style={styles.name}>{freelancerView.name}</Text>
+          <Text style={styles.course}>{freelancerView.course} - {freelancerView.university}</Text>
           <View style={styles.heroRow}>
-            <TrustBadge type={freelancer.isVerified ? 'verified' : 'reliable'} />
+            <TrustBadge type={freelancerView.isVerified ? 'verified' : 'reliable'} />
             <View style={styles.reputationPill}>
-              <Text style={styles.reputationText}>{freelancer.reputationLabel}</Text>
+              <Text style={styles.reputationText}>{freelancerView.reputationLabel}</Text>
             </View>
             <View style={styles.ratingRow}>
               <Ionicons name="star" size={14} color="#1A5C38" />
-              <Text style={styles.ratingText}>{freelancer.rating.toFixed(1)}</Text>
+              <Text style={styles.ratingText}>{freelancerView.rating.toFixed(1)}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{freelancer.completedJobs}</Text>
+            <Text style={styles.statValue}>{freelancerView.completedJobs}</Text>
             <Text style={styles.statLabel}>Completed Jobs</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{freelancer.responseRate}</Text>
+            <Text style={styles.statValue}>{freelancerView.responseRate}</Text>
             <Text style={styles.statLabel}>Response Rate</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{freelancer.memberSince}</Text>
+            <Text style={styles.statValue}>{freelancerView.memberSince}</Text>
             <Text style={styles.statLabel}>Member Since</Text>
           </View>
         </View>
 
         <View style={styles.reputationRow}>
-          <ReputationScore score={92} />
+          <ReputationScore score={freelancerView.campusReputation} />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.sectionText}>{freelancer.bio}</Text>
+          <Text style={styles.sectionText}>{freelancerView.bio}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Expertise</Text>
           <FlatList
-            data={freelancer.expertise}
+            data={freelancerView.expertise}
             keyExtractor={(item) => item}
             numColumns={2}
             scrollEnabled={false}
@@ -127,11 +236,11 @@ const FreelancerProfileScreen = () => {
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <Text style={styles.priceLabel}>From ₱{freelancer.price}/session</Text>
+        <Text style={styles.priceLabel}>From ₱{freelancerView.price}/session</Text>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Request service"
-          onPress={() => router.push({ pathname: '/request/step1', params: { freelancerId: id } })}
+          onPress={() => router.push({ pathname: '/request/step1', params: { freelancerId: freelancerView.id } })}
           style={({ pressed }) => [styles.requestButton, pressed && styles.pressed]}
         >
           <Text style={styles.requestText}>Request Service</Text>

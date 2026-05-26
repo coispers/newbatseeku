@@ -11,17 +11,18 @@ type ErrandCardProps = {
   location: string;
   timeAgo: string;
   actionLabel?: string;
+  onPress: () => void;
   onAccept: () => void;
 };
 
-export const ErrandCard = ({ title, budget, location, timeAgo, actionLabel = 'Accept', onAccept }: ErrandCardProps) => {
+export const ErrandCard = ({ title, budget, location, timeAgo, actionLabel = 'Accept', onPress, onAccept }: ErrandCardProps) => {
   const { Colors } = useTheme();
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Open errand"
-      onPress={onAccept}
+      onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <View style={styles.row}>

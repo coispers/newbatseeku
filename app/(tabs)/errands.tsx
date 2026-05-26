@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '../../components/ui/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -97,8 +97,74 @@ const ErrandsScreen = () => {
     return scoped.filter((o) => String(o.category).toLowerCase() === String(selected).toLowerCase());
   }, [errands, isFreelancer, selected, user?.id]);
 
-  const handleErrandAction = async (itemId: string) => {
-    router.push(`/order/${itemId}`);
+  const applyForErrand = async (item: RemoteErrand) => {
+    if (!user) return;
+
+    const { data: profileRow, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      Alert.alert('Unable to apply', profileError.message);
+      return;
+    }
+
+    if (!profileRow) {
+      const { error: upsertError } = await supabase
+        .from('profiles')
+        .upsert({ id: user.id, full_name: user.name, role: user.role }, { onConflict: 'id' });
+
+      if (upsertError) {
+        Alert.alert('Unable to apply', upsertError.message);
+        return;
+      }
+    }
+
+    const { data: existing, error: existingError } = await supabase
+      .from('errand_applications')
+      .select('id')
+      .eq('errand_id', item.id)
+      .eq('freelancer_id', user.id)
+      .maybeSingle();
+
+    if (existingError) {
+      Alert.alert('Unable to apply', existingError.message);
+      return;
+    }
+
+    if (existing) {
+      Alert.alert('Already applied', 'You already applied for this errand.');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('errand_applications')
+      .insert({ errand_id: item.id, freelancer_id: user.id });
+
+    if (error) {
+      Alert.alert('Unable to apply', error.message);
+      return;
+    }
+
+    Alert.alert('Application sent', 'The student will review your application.');
+  };
+
+  const openErrandDetails = (item: RemoteErrand) => {
+    router.push(`/order/${item.id}`);
+  };
+
+  const handleErrandAccept = (item: RemoteErrand) => {
+    if (!isFreelancer) {
+      openErrandDetails(item);
+      return;
+    }
+
+    Alert.alert('Accept request', 'Do you want to accept this errand?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Accept', onPress: () => applyForErrand(item) },
+    ]);
   };
 
   return (
@@ -166,7 +232,8 @@ const ErrandsScreen = () => {
             location="BatStateU"
             timeAgo={timeSince(item.created_at ?? new Date().toISOString())}
             actionLabel={isFreelancer ? 'Accept' : 'View progress'}
-            onAccept={() => handleErrandAction(item.id)}
+            onPress={() => openErrandDetails(item)}
+            onAccept={() => handleErrandAccept(item)}
           />
         )}
       />
