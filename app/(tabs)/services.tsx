@@ -137,8 +137,8 @@ const ServicesScreen = () => {
               )}
             </View>
 
-            <SearchBar placeholder={isFreelancer ? "Search tasks" : "Search services"} onPress={() => {}} />
-            
+            <SearchBar placeholder={isFreelancer ? "Search tasks" : "Search services"} onPress={() => { }} />
+
             <View style={styles.filterRow}>
               <FlatList
                 data={isFreelancer ? orderFilters : studentFilters}
@@ -159,28 +159,28 @@ const ServicesScreen = () => {
               const statusLabel = toOrderStatus(errand.status);
               const title = errand.description ?? `${errand.category ?? 'Errand'} request`;
               return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`View progress for ${title}`}
-              onPress={() => router.push(`/order/${errand.id}`)}
-              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-            >
-              <View style={styles.orderHeader}>
-                <Text style={styles.orderTitle}>{title}</Text>
-                <View style={[styles.orderStatus, { backgroundColor: Colors.primaryLight }]}>
-                  <Text style={[styles.orderStatusText, { color: Colors.primary }]}>{statusLabel}</Text>
-                </View>
-              </View>
-              <Text style={styles.orderMeta}>Requested by {errand.requester_name ?? 'Student'}</Text>
-              <View style={styles.orderFooter}>
-                <Text style={styles.orderBudget}>₱{errand.budget ?? 0}</Text>
-                <Text style={styles.orderTime}>{timeSince(errand.created_at ?? new Date().toISOString())}</Text>
-              </View>
-              <View style={styles.orderActionRow}>
-                <Text style={styles.orderActionText}>View progress</Text>
-                <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
-              </View>
-            </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`View progress for ${title}`}
+                  onPress={() => router.push(`/order/${errand.id}`)}
+                  style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                >
+                  <View style={styles.orderHeader}>
+                    <Text style={styles.orderTitle}>{title}</Text>
+                    <View style={[styles.orderStatus, { backgroundColor: Colors.primaryLight }]}>
+                      <Text style={[styles.orderStatusText, { color: Colors.primary }]}>{statusLabel}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.orderMeta}>Requested by {errand.requester_name ?? 'Student'}</Text>
+                  <View style={styles.orderFooter}>
+                    <Text style={styles.orderBudget}>₱{errand.budget ?? 0}</Text>
+                    <Text style={styles.orderTime}>{timeSince(errand.created_at ?? new Date().toISOString())}</Text>
+                  </View>
+                  <View style={styles.orderActionRow}>
+                    <Text style={styles.orderActionText}>View progress</Text>
+                    <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+                  </View>
+                </Pressable>
               );
             })()
           ) : (
