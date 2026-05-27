@@ -151,7 +151,7 @@ const ServicesScreen = () => {
                 <Text style={styles.title}>Tasks</Text>
               </View>
 
-              <SearchBar placeholder="Search tasks" onPress={() => {}} />
+              <SearchBar placeholder="Search tasks" onPress={() => { }} />
 
               <View style={styles.filterRow}>
                 <FlatList
@@ -246,7 +246,7 @@ const ServicesScreen = () => {
                 </Pressable>
               </View>
 
-              <SearchBar placeholder="Search services" onPress={() => {}} />
+              <SearchBar placeholder="Search services" onPress={() => { }} />
 
               <View style={styles.filterRow}>
                 <FlatList

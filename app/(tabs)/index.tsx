@@ -162,7 +162,7 @@ const HomeScreen = () => {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Notifications"
-            onPress={() => {}}
+            onPress={() => { }}
             style={({ pressed }) => [styles.bellCircle, { backgroundColor: '#F0F0F2' }, pressed && styles.pressed]}
           >
             <Ionicons name="notifications-outline" size={20} color="#8B0000" />
@@ -187,7 +187,7 @@ const HomeScreen = () => {
 
         <SearchBar
           placeholder="What do you need help with?"
-          onPress={() => {}}
+          onPress={() => { }}
           style={styles.studentSearch}
         />
 
@@ -196,7 +196,7 @@ const HomeScreen = () => {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="See all categories"
-            onPress={() => {}}
+            onPress={() => { }}
           >
             <Text style={[styles.seeAll, { color: '#8B0000' }]}>See all</Text>
           </Pressable>
@@ -222,7 +222,7 @@ const HomeScreen = () => {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="See all available"
-            onPress={() => {}}
+            onPress={() => { }}
           >
             <Text style={[styles.seeAll, { color: '#8B0000' }]}>See all</Text>
           </Pressable>
@@ -269,7 +269,7 @@ const HomeScreen = () => {
               key={item.id}
               accessibilityRole="button"
               accessibilityLabel={item.label}
-              onPress={() => {}}
+              onPress={() => { }}
               style={({ pressed }) => [styles.quickCard, pressed && styles.pressed]}
             >
               <MaterialCommunityIcons name={item.icon as any} size={22} color="#8B0000" />
@@ -331,7 +331,7 @@ const HomeScreen = () => {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Notifications"
-                onPress={() => {}}
+                onPress={() => { }}
                 style={({ pressed }) => [styles.bellCircle, { backgroundColor: '#DCFCE7', borderColor: '#BBF7D0', borderWidth: 1 }, pressed && styles.pressed]}
               >
                 <Ionicons name="notifications-outline" size={20} color="#1A5C38" />
@@ -462,7 +462,7 @@ const HomeScreen = () => {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="See all active orders"
-              onPress={() => {}}
+              onPress={() => { }}
             >
               <Text style={[styles.seeAll, { color: '#1A5C38' }]}>See all</Text>
             </Pressable>
