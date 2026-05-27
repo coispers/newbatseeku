@@ -99,29 +99,139 @@ const ServicesScreen = () => {
     };
   }, [isFreelancer, user?.id]);
 
-  const filtered = useMemo(() => {
-    if (isFreelancer) {
-      return errands.filter((item) => toOrderStatus(item.status) === selected);
+  const updateErrandStatus = async (errand: RemoteErrand, nextStatus: 'in_progress' | 'open') => {
+    const updates =
+      nextStatus === 'open'
+        ? { status: 'open', freelancer_id: null }
+        : { status: 'in_progress' };
+
+    const { data, error } = await supabase
+      .from('errands')
+      .update(updates)
+      .eq('id', errand.id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Failed to update errand status:', error);
+      return;
     }
+
+    setErrands((current) => {
+      if (nextStatus === 'open') {
+        return current.filter((item) => item.id !== errand.id);
+      }
+
+      return current.map((item) => (item.id === errand.id ? (data as RemoteErrand) : item));
+    });
+  };
+
+  const errandFiltered = useMemo(
+    () => errands.filter((item) => toOrderStatus(item.status) === selected),
+    [errands, selected]
+  );
+
+  const studentFiltered = useMemo(() => {
     if (selected === 'All') {
       return freelancers;
     }
     return freelancers.filter((item) => item.expertise.includes(selected));
-  }, [errands, isFreelancer, selected]);
+  }, [selected]);
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: Colors.background }]}>
-      <FlatList
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <View>
-            <View style={styles.headerRow}>
-              <Text style={styles.title}>{isFreelancer ? 'Tasks' : 'Services'}</Text>
+      {isFreelancer ? (
+        <FlatList
+          data={errandFiltered}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.headerRow}>
+                <Text style={styles.title}>Tasks</Text>
+              </View>
 
-              {/* Show primary CTA only for students (Find Nearby Help) */}
-              {!isFreelancer && (
+              <SearchBar placeholder="Search tasks" onPress={() => {}} />
+
+              <View style={styles.filterRow}>
+                <FlatList
+                  data={orderFilters}
+                  horizontal
+                  keyExtractor={(item) => item}
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <FilterChip label={item} isSelected={selected === item} onPress={() => setSelected(item)} />
+                  )}
+                />
+              </View>
+            </View>
+          }
+          renderItem={({ item }) => {
+            const statusLabel = toOrderStatus(item.status);
+            const title = item.description ?? `${item.category ?? 'Errand'} request`;
+            const isRequest = statusLabel === 'Requests';
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`View progress for ${title}`}
+                onPress={() => router.push(`/order/${item.id}`)}
+                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+              >
+                <View style={styles.orderHeader}>
+                  <Text style={styles.orderTitle}>{title}</Text>
+                  <View style={[styles.orderStatus, { backgroundColor: Colors.primaryLight }]}>
+                    <Text style={[styles.orderStatusText, { color: Colors.primary }]}>{statusLabel}</Text>
+                  </View>
+                </View>
+                <Text style={styles.orderMeta}>Requested by {item.requester_name ?? 'Student'}</Text>
+                <View style={styles.orderFooter}>
+                  <Text style={styles.orderBudget}>₱{item.budget ?? 0}</Text>
+                  <Text style={styles.orderTime}>{timeSince(item.created_at ?? new Date().toISOString())}</Text>
+                </View>
+                <View style={styles.orderActionRow}>
+                  <Text style={styles.orderActionText}>View progress</Text>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+                </View>
+                {isRequest && (
+                  <View style={styles.actionButtonsRow}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Accept request"
+                      onPress={() => updateErrandStatus(item, 'in_progress')}
+                      style={({ pressed }) => [
+                        styles.acceptButton,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <Text style={styles.acceptButtonText}>Accept</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Deny request"
+                      onPress={() => updateErrandStatus(item, 'open')}
+                      style={({ pressed }) => [
+                        styles.denyButton,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <Text style={styles.denyButtonText}>Deny</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </Pressable>
+            );
+          }}
+        />
+      ) : (
+        <FlatList
+          data={studentFiltered}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.headerRow}>
+                <Text style={styles.title}>Services</Text>
+
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Find Nearby Help"
@@ -134,56 +244,24 @@ const ServicesScreen = () => {
                 >
                   <Text style={styles.ctaText}>Find Nearby Help</Text>
                 </Pressable>
-              )}
-            </View>
+              </View>
 
-            <SearchBar placeholder={isFreelancer ? "Search tasks" : "Search services"} onPress={() => { }} />
+              <SearchBar placeholder="Search services" onPress={() => {}} />
 
-            <View style={styles.filterRow}>
-              <FlatList
-                data={isFreelancer ? orderFilters : studentFilters}
-                horizontal
-                keyExtractor={(item) => item}
-                showsHorizontalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <FilterChip label={item} isSelected={selected === item} onPress={() => setSelected(item)} />
-                )}
-              />
+              <View style={styles.filterRow}>
+                <FlatList
+                  data={studentFilters}
+                  horizontal
+                  keyExtractor={(item) => item}
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <FilterChip label={item} isSelected={selected === item} onPress={() => setSelected(item)} />
+                  )}
+                />
+              </View>
             </View>
-          </View>
-        }
-        renderItem={({ item }) =>
-          isFreelancer ? (
-            (() => {
-              const errand = item as RemoteErrand;
-              const statusLabel = toOrderStatus(errand.status);
-              const title = errand.description ?? `${errand.category ?? 'Errand'} request`;
-              return (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`View progress for ${title}`}
-                  onPress={() => router.push(`/order/${errand.id}`)}
-                  style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-                >
-                  <View style={styles.orderHeader}>
-                    <Text style={styles.orderTitle}>{title}</Text>
-                    <View style={[styles.orderStatus, { backgroundColor: Colors.primaryLight }]}>
-                      <Text style={[styles.orderStatusText, { color: Colors.primary }]}>{statusLabel}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.orderMeta}>Requested by {errand.requester_name ?? 'Student'}</Text>
-                  <View style={styles.orderFooter}>
-                    <Text style={styles.orderBudget}>₱{errand.budget ?? 0}</Text>
-                    <Text style={styles.orderTime}>{timeSince(errand.created_at ?? new Date().toISOString())}</Text>
-                  </View>
-                  <View style={styles.orderActionRow}>
-                    <Text style={styles.orderActionText}>View progress</Text>
-                    <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
-                  </View>
-                </Pressable>
-              );
-            })()
-          ) : (
+          }
+          renderItem={({ item }) => (
             <View style={styles.card}>
               <View style={styles.cardRow}>
                 <Avatar initials={item.avatar} size={52} />
@@ -224,9 +302,9 @@ const ServicesScreen = () => {
                 </View>
               </View>
             </View>
-          )
-        }
-      />
+          )}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -381,6 +459,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 4,
+  },
+  actionButtonsRow: {
+    marginTop: 12,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  acceptButton: {
+    flex: 1,
+    backgroundColor: '#1A5C38',
+    borderRadius: 999,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  acceptButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  denyButton: {
+    flex: 1,
+    backgroundColor: '#FDECEA',
+    borderRadius: 999,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  denyButtonText: {
+    color: '#8B0000',
+    fontSize: 13,
+    fontWeight: '600',
   },
   orderActionText: {
     fontSize: 12,

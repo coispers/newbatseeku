@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,12 +7,24 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../hooks/useAuth';
 import { useOrders } from '../../hooks/useOrders';
 import { useTheme } from '../../hooks/useTheme';
-import { categories, freelancers, popularServices } from '../../constants/mock-data';
+import { categories, popularServices } from '../../constants/mock-data';
 import { CategoryCard } from '../../components/home/CategoryCard';
 import { FreelancerCard } from '../../components/home/FreelancerCard';
 import { ServiceCard } from '../../components/services/ServiceCard';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { AppText as Text } from '../../components/ui/AppText';
+import { supabase } from '../../lib/supabase';
+
+type RemoteFreelancerProfile = {
+  id: string;
+  full_name: string;
+  avatar: string | null;
+  expertise: string[] | string | null;
+  rating: number | null;
+  base_price: number | null;
+  is_verified: boolean | null;
+  status: boolean | null;
+};
 
 const HomeScreen = () => {
   const router = useRouter();
@@ -24,6 +36,7 @@ const HomeScreen = () => {
 
   // State for Freelancer Availability
   const [isOnline, setIsOnline] = useState(true);
+  const [availableFreelancers, setAvailableFreelancers] = useState<RemoteFreelancerProfile[]>([]);
 
   // Student specific category chips selection state
   const [selectedCategory, setSelectedCategory] = useState('tutoring');
@@ -42,6 +55,87 @@ const HomeScreen = () => {
     () => orders.filter((item) => item.status !== 'Finished').slice(0, 3),
     [orders]
   );
+
+  useEffect(() => {
+    if (!isFreelancer || !user?.id) {
+      return;
+    }
+
+    let isActive = true;
+
+    const loadAvailability = async () => {
+      const { data, error } = await supabase
+        .from('freelancer_profiles')
+        .select('status')
+        .eq('id', user.id)
+        .single();
+
+      if (!isActive) return;
+
+      if (error) {
+        console.error('Failed to load availability status:', error);
+        return;
+      }
+
+      setIsOnline(!!data?.status);
+    };
+
+    loadAvailability();
+
+    return () => {
+      isActive = false;
+    };
+  }, [isFreelancer, user?.id]);
+
+  useEffect(() => {
+    if (isFreelancer) {
+      return;
+    }
+
+    let isActive = true;
+
+    const loadAvailableFreelancers = async () => {
+      const { data, error } = await supabase
+        .from('freelancer_profiles')
+        .select('id, full_name, avatar, expertise, rating, base_price, is_verified, status')
+        .eq('status', true)
+        .order('rating', { ascending: false })
+        .limit(10);
+
+      if (!isActive) return;
+
+      if (error) {
+        console.error('Failed to load available freelancers:', error);
+        setAvailableFreelancers([]);
+        return;
+      }
+
+      setAvailableFreelancers((data ?? []) as RemoteFreelancerProfile[]);
+    };
+
+    loadAvailableFreelancers();
+
+    return () => {
+      isActive = false;
+    };
+  }, [isFreelancer]);
+
+  const parseExpertise = (value: RemoteFreelancerProfile['expertise']) => {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [value];
+      } catch {
+        return [value];
+      }
+    }
+
+    return [];
+  };
 
   // Helper: Status Pill Color Mapping
   const getStatusStyle = (status: string) => {
@@ -135,23 +229,27 @@ const HomeScreen = () => {
         </View>
 
         <FlatList
-          data={freelancers}
+          data={availableFreelancers}
           horizontal
           keyExtractor={(item) => item.id}
           showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <FreelancerCard
-              name={item.name}
-              subject={item.expertise[0]}
-              rating={item.rating}
-              price={item.price}
-              isOnline={item.isOnline}
-              isVerified={item.isVerified}
-              avatar={item.avatar}
-              reputationScore={Math.round(item.rating * 20)}
-              onPress={() => router.push(`/freelancer/${item.id}`)}
-            />
-          )}
+          renderItem={({ item }) => {
+            const expertise = parseExpertise(item.expertise);
+            const rating = item.rating ?? 4.8;
+            return (
+              <FreelancerCard
+                name={item.full_name}
+                subject={expertise[0] ?? 'Tutor'}
+                rating={rating}
+                price={item.base_price ?? 150}
+                isOnline={!!item.status}
+                isVerified={!!item.is_verified}
+                avatar={item.avatar ?? 'FT'}
+                reputationScore={Math.round(rating * 20)}
+                onPress={() => router.push(`/freelancer/${item.id}`)}
+              />
+            );
+          }}
         />
 
         <View style={styles.sectionHeader}>
@@ -250,7 +348,22 @@ const HomeScreen = () => {
             </View>
             <Switch
               value={isOnline}
-              onValueChange={setIsOnline}
+              onValueChange={async (nextValue) => {
+                if (!user?.id) {
+                  return;
+                }
+
+                setIsOnline(nextValue);
+                const { error } = await supabase
+                  .from('freelancer_profiles')
+                  .update({ status: nextValue })
+                  .eq('id', user.id);
+
+                if (error) {
+                  console.error('Failed to update availability status:', error);
+                  setIsOnline((prev) => !prev);
+                }
+              }}
               trackColor={{ true: '#1A5C38', false: '#E5E5E7' }}
               thumbColor="#FFFFFF"
             />
